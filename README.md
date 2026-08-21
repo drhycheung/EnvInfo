@@ -94,7 +94,23 @@ The dashboard was produced in one OpenCode session using an agentic verify-first
 Total elapsed time: roughly one working session, most of it spent on steps 1–3 — which is exactly
 why those findings are baked into the student prompt below.
 
-## 5. Student reproduction prompt
+## 5. Design Thinking: from raw data to an intuitive dashboard
+
+The dashboard is the output of one design-thinking loop applied to a real usability problem:
+Hong Kong's air quality data exist, but they are not intuitive.
+
+| Stage | This project's arc |
+|---|---|
+| **1. Empathise 同理心** | The user pain: pollutant tables buried on official sites, technical units (μg/m³), AQHI split from pollutant detail, sources scattered across pages, little geographic context. Non-experts cannot quickly answer "is the air bad near me right now?" |
+| **2. Define 定義** | Problem statement: *air quality information is available but not intuitive — residents need a single view that makes monitoring effortless and comparison instant.* Design goal: one screen, minimal jargon, at-a-glance status |
+| **3. Ideate 構思** | Options to make data intuitive: colour-coded map markers (read status without reading numbers), graded legends instead of raw thresholds, health-risk wording alongside indices, click-for-detail popups, a full-data table, bilingual labels. Converged design: interactive Leaflet map + control panel + summary table |
+| **4. Prototype 原型** | The single-file dashboard itself: every ideation choice materialised — green-to-purple marker colours, popups on demand, checkboxes to reduce clutter, 300-second auto-refresh so the page "monitors" without user effort |
+| **5. Test 測試** | Browser-automated checks plus real-user feedback; each fine-tuning round improved intuitiveness — wider panel, fully bilingual text, clearer table spacing, an explicit modelled-vs-measured disclaimer |
+
+Intuition was treated as the measurable outcome: every design decision traces back to reducing
+the time from "open page" to "understood the air".
+
+## 6. Student reproduction prompt
 
 Give the prompt below to Gemini, OpenCode, Claude, ChatGPT or any coding agent. It encodes every
 pitfall discovered above, so a working dashboard should come out first-pass:
@@ -144,7 +160,7 @@ REQUIREMENTS:
 - Add generous Chinese comments explaining each functional block (teaching use).
 ```
 
-## 6. Licences & attribution
+## 7. Licences & attribution
 
 - AQHI data: Environmental Protection Department, HKSAR Government, via [DATA.GOV.HK](https://data.gov.hk).
 - Pollutant concentration layer: [Air quality data by Open-Meteo.com](https://open-meteo.com/),
