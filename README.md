@@ -1,5 +1,7 @@
 # Hong Kong Air Quality Interactive Dashboard (MIS Teaching Demo)
 
+**Live demo (GitHub Pages): https://drhycheung.github.io/EnvInfo/**
+
 A single-file, front-end-only interactive dashboard for visualising Hong Kong's real-time air
 quality across all **18 EPD monitoring stations** (15 general + 3 roadside). Built for classroom
 demonstration in **Environmental Informatics** and **Smart City** courses.
