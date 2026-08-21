@@ -1,4 +1,4 @@
-# Hong Kong Air Quality Interactive Dashboard (MIS Teaching Demo)
+# Hong Kong Air Quality Interactive Dashboard (GIS Teaching Demo)
 
 **Live demo (GitHub Pages): https://drhycheung.github.io/EnvInfo/**
 
