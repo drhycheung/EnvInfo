@@ -32,12 +32,21 @@ browser and it works; drop it into a GitHub Pages repository and it is deployed.
 
 A key lesson of this project is that **the "obvious" official API cannot be used from a browser**:
 
-| Source | Data | CORS? | Usable in browser? |
+| Source | Data provided | CORS policy | Browser? |
 |---|---|---|---|
-| `dashboard.data.gov.hk/api/aqhi-individual?format=json` | Official EPD AQHI + health risk + publish time, all 18 stations, hourly | `Access-Control-Allow-Origin: *` | ✅ Yes |
-| `air-quality-api.open-meteo.com/v1/air-quality` | NO₂, O₃, SO₂, PM2.5, PM10 concentrations (CAMS model) at any lat/lon; batchable | `*`, keyless | ✅ Yes |
-| `www.aqhi.gov.hk/epd/ddata/html/out/24pc_Eng.xml` | Official station pollutant readings (past 24 h) | Locked to `https://aqhi.gov.hk` | ❌ Blocked |
-| `dashboard.data.gov.hk/dashboard/smart_environment/data/map` (POST) | Official readings **plus coordinates** | No CORS header at all | ❌ Blocked |
+| EPD AQHI JSON | Official AQHI + health risk + publish time, all 18 stations, hourly | Open (`*`) | ✅ |
+| Open-Meteo air quality | NO₂, O₃, SO₂, PM2.5, PM10 (CAMS model) at any lat/lon; batchable | Open (`*`), keyless | ✅ |
+| EPD pollutant XML | Official station readings, past 24 h | Locked to aqhi.gov.hk | ❌ |
+| City Dashboard map feed (POST) | Official readings **plus coordinates** | None sent | ❌ |
+
+Full endpoint URLs:
+
+```text
+✅ https://dashboard.data.gov.hk/api/aqhi-individual?format=json
+✅ https://air-quality-api.open-meteo.com/v1/air-quality
+❌ https://www.aqhi.gov.hk/epd/ddata/html/out/24pc_Eng.xml
+❌ https://dashboard.data.gov.hk/dashboard/smart_environment/data/map   (POST only)
+```
 
 So the dashboard fuses:
 
@@ -57,8 +66,11 @@ So the dashboard fuses:
 
 - **Locally**: double-click `index.html` (any modern browser), or serve it:
   `python3 -m http.server 8000` then visit `http://localhost:8000/index.html`.
-- **GitHub Pages**: commit the file to a repository, enable Pages (Settings → Pages → deploy from
-  branch), and open `https://drhycheung.github.io/EnvInfo/`.
+- **GitHub Pages (your own deployment)**: push `index.html` to *your* GitHub repository, then enable
+  Pages via **Settings → Pages → Deploy from a branch** (select the branch and `/ (root)`). Your
+  dashboard will go live at `https://<your-username>.github.io/<repo-name>/` — replace the
+  placeholders with your own GitHub username and repository name.
+  (The live-demo link at the top of this README is the author's own deployment.)
 
 Desktop browsers assumed (no mobile optimisation, by design).
 
