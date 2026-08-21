@@ -111,7 +111,7 @@ Intuition was treated as the measurable outcome: every design decision traces ba
 the time from "open page" to "understood the air".
 
 **Benchmark against the official service**: EPD operates its own air quality website/dashboard at
-[www.aqhi.gov.hk](https://www.aqhi.gov.hk/en/). Its pollutant figures are **more accurate** —
+[www.aqhi.gov.hk](https://www.aqhi.gov.hk). Its pollutant figures are **more accurate** —
 direct measurements from the monitoring stations rather than modelled values — but the
 presentation is **less intuitive**: there is no map view, so spatial comparison and at-a-glance
 status are lost. This project deliberately trades some measurement accuracy for much greater
