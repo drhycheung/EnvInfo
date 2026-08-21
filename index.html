@@ -1,0 +1,592 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>香港空氣質素互動儀表板 | Hong Kong Air Quality Dashboard</title>
+
+<!-- ============================================================
+     Leaflet.js 地圖庫（僅外部依賴，經 CDN 引入，無需本地文件）
+     ============================================================ -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+
+<style>
+/* ============================================================
+   全局樣式：桌面端優先，左右兩欄佈局
+   ============================================================ */
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; }
+body {
+  font-family: "PingFang TC", "Microsoft JhengHei", "Helvetica Neue", Arial, sans-serif;
+  display: flex; flex-direction: column;
+  color: #1f2937; background: #f3f4f6;
+}
+
+/* ---------- 頂部標題欄 ---------- */
+header {
+  background: #0d3b66; color: #fff;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 10px 18px; flex: 0 0 auto;
+}
+header h1 { font-size: 20px; font-weight: 700; }
+header .subtitle { font-size: 12px; opacity: .85; }
+.status-box { text-align: right; font-size: 13px; }
+#btn-refresh {
+  margin-left: 12px; padding: 5px 14px; cursor: pointer;
+  border: none; border-radius: 4px;
+  background: #faf0ca; color: #0d3b66; font-weight: 600;
+}
+#btn-refresh:hover { background: #f9e28f; }
+
+/* ---------- 錯誤提示橫幅（網絡請求失敗時顯示） ---------- */
+#error-banner {
+  background: #b3261e; color: #fff; font-size: 14px;
+  padding: 8px 18px; flex: 0 0 auto;
+}
+#error-banner[hidden] { display: none; }
+
+/* ---------- 主體：左地圖 + 右側邊欄 ---------- */
+main { display: flex; flex: 1 1 auto; min-height: 0; }
+#map-wrap { flex: 1 1 auto; min-width: 0; }
+#map { width: 100%; height: 100%; }
+
+#sidebar {
+  flex: 0 0 560px; overflow-y: auto;
+  background: #fff; border-left: 1px solid #d1d5db;
+  display: flex; flex-direction: column;
+}
+.panel { padding: 14px 16px; border-bottom: 1px solid #e5e7eb; }
+.panel h2 {
+  font-size: 14px; color: #0d3b66; margin-bottom: 8px;
+  border-left: 4px solid #0d3b66; padding-left: 8px;
+}
+.panel h2 small { color: #6b7280; font-weight: 400; }
+
+/* ---------- 控件（單選/複選） ---------- */
+.ctrl-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 4px 10px; }
+.ctrl-grid label { font-size: 13px; cursor: pointer; user-select: none; }
+.note { font-size: 11px; color: #6b7280; margin-top: 6px; line-height: 1.5; }
+
+/* ---------- 圖例 ---------- */
+#legend .legend-row { display: flex; align-items: center; gap: 8px; font-size: 12px; margin: 3px 0; }
+.legend-swatch { width: 14px; height: 14px; border-radius: 3px; flex: 0 0 auto; }
+
+/* ---------- 數據表格 ---------- */
+.table-scroll { overflow-x: auto; }
+#data-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+#data-table th, #data-table td { border: 1px solid #e5e7eb; padding: 6px 8px; text-align: center; }
+#data-table thead th { background: #0d3b66; color: #fff; position: sticky; top: 0; }
+#data-table tbody tr:nth-child(even) { background: #f9fafb; }
+#data-table td.stn { text-align: left; white-space: nowrap; }
+.chip {
+  display: inline-block; min-width: 36px; padding: 1px 6px;
+  border-radius: 3px; color: #fff; font-weight: 600;
+}
+.na { color: #9ca3af; }
+
+/* ---------- 資料來源聲明（頁腳） ---------- */
+#attribution {
+  margin-top: auto; padding: 12px 16px;
+  font-size: 11px; color: #6b7280; line-height: 1.7; background: #f9fafb;
+}
+#attribution a { color: #2563eb; }
+
+/* Leaflet 彈窗字體微調 */
+.leaflet-popup-content { font-size: 13px; line-height: 1.55; }
+.badge {
+  display: inline-block; padding: 0 6px; border-radius: 3px;
+  font-size: 11px; color: #fff; vertical-align: middle;
+}
+.badge.general  { background: #2e7d32; }
+.badge.roadside { background: #ef6c00; }
+</style>
+</head>
+<body>
+
+<!-- ================= 頂部標題欄 ================= -->
+<header>
+  <div>
+    <h1>香港空氣質素互動儀表板</h1>
+    <div class="subtitle">Hong Kong Air Quality Interactive Dashboard 香港空氣質素互動儀表板 — Environmental Informatics / Smart City Teaching Demo 教學示範</div>
+  </div>
+  <div class="status-box">
+    <span id="status-text">Loading data 正在載入數據…</span>
+    <button id="btn-refresh" type="button">Refresh 立即更新</button>
+  </div>
+</header>
+
+<!-- ================= 錯誤橫幅（請求失敗時顯示） ================= -->
+<div id="error-banner" hidden></div>
+
+<!-- ================= 主體區域 ================= -->
+<main>
+  <!-- ① 左側：Leaflet 交互式地圖主視圖 -->
+  <section id="map-wrap"><div id="map"></div></section>
+
+  <!-- ② 右側：控制面板 + 數據表格面板 -->
+  <aside id="sidebar">
+
+    <div class="panel">
+      <h2>地圖著色指標 <small>Marker colour metric</small></h2>
+      <div id="metric-radios" class="ctrl-grid"><!-- 由 JS 動態生成 --></div>
+
+      <h2 style="margin-top:14px">顯示變量 <small>Variables to display</small></h2>
+      <div id="var-checkboxes" class="ctrl-grid"><!-- 由 JS 動態生成 --></div>
+      <p class="note">Tick to show only the selected variables in the map popups and the table below.
+      勾選後，地圖彈窗與下方數據表將同步只顯示所選變量。<br>
+      Pollutant concentrations are Open-Meteo/CAMS modelled values (not in-situ measurements);
+      AQHI is the official EPD published reading.
+      污染物濃度為 Open-Meteo/CAMS 大氣模擬值（非站內實測）；AQHI 為環保署實測發布值。</p>
+
+      <h2 style="margin-top:14px">圖例 <small>Legend</small></h2>
+      <div id="legend"><!-- 由 JS 動態生成 --></div>
+    </div>
+
+    <div class="panel">
+      <h2>全站數據表 <small>All stations</small></h2>
+      <div class="table-scroll">
+        <table id="data-table"><!-- 由 JS 動態生成 --></table>
+      </div>
+      <p class="note">⚠️ Modelled pollutant values may differ from actual station measurements and are for reference only.
+      模擬污染物數值或與監測站實際測量結果存在偏差，僅供參考。</p>
+    </div>
+
+    <!-- 資料來源與版權聲明（開放數據合規要求） -->
+    <footer id="attribution">
+      <b>資料來源 Data Sources</b><br>
+      ① AQHI health index 空氣質素健康指數：Environmental Protection Department, HKSAR Government
+      香港環境保護署（via 經 <a href="https://data.gov.hk" target="_blank" rel="noopener">DATA.GOV.HK</a>
+      open data platform 開放數據平台,
+      <a href="https://dashboard.data.gov.hk/api/aqhi-individual?format=json" target="_blank" rel="noopener">API</a>）。<br>
+      ② Modelled pollutant concentrations 污染物濃度模擬值（NO₂/O₃/SO₂/PM2.5/PM10）：
+      <a href="https://open-meteo.com/" target="_blank" rel="noopener">Air quality data by Open-Meteo.com</a>,
+      licensed 採用 <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener">CC BY 4.0</a>;
+      underlying data 底層數據: Copernicus Atmosphere Monitoring Service (CAMS) / ECMWF.<br>
+      ③ Basemap 底圖: © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap contributors</a>;
+      map library 地圖庫: <a href="https://leafletjs.com" target="_blank" rel="noopener">Leaflet</a>.
+    </footer>
+  </aside>
+</main>
+
+<!-- Leaflet JS（經 CDN 引入） -->
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+<script>
+'use strict';
+/* ============================================================
+   區塊 1：全局配置
+   - AQHI_API_URL   ：環保署「個別監測站空氣質素健康指數」實時 JSON
+                      （CORS 開放 access-control-allow-origin:*，瀏覽器可直接抓取）
+   - OPEN_METEO_URL ：Open-Meteo 空氣質素 API（CORS 開放、免密鑰）
+                      提供五種污染物的 CAMS 模擬濃度；支援一次請求查詢多個坐標
+   - POLL_INTERVAL_MS：自動輪詢間隔 = 300 秒
+   ============================================================ */
+const AQHI_API_URL    = 'https://dashboard.data.gov.hk/api/aqhi-individual?format=json';
+const OPEN_METEO_URL  = 'https://air-quality-api.open-meteo.com/v1/air-quality';
+const POLL_INTERVAL_MS = 300 * 1000;
+
+/* ============================================================
+   區塊 2：18 個監測站靜態元數據（硬編碼）
+   ⚠️ name 欄位必須與官方 API 返回的 station 名稱文本完全一致
+     （已逐一核對 aqhi-individual JSON 與 24pc_Eng.xml 的 StationName）
+   坐標來源：
+   - 16 站：DATA.GOV.HK City Dashboard 官方站點地址表（郵政地址對應坐標）
+   - 南區／北區兩新站（2020 年啟用）：官方新聞公報公佈的站址
+     （香港仔網球及壁球中心天台、上水保榮路體育館），坐標取自 OSM 建築物位置
+   ============================================================ */
+const STATIONS = [
+  { name:'Central/Western', zh:'中西區', type:'general',  lat:22.28489, lon:114.14442, addr:'西營盤社區綜合大樓（Sai Ying Pun Community Complex, 2 High Street）' },
+  { name:'Southern',        zh:'南區',   type:'general',  lat:22.24752, lon:114.15997, addr:'香港仔網球及壁球中心天台（Aberdeen Tennis and Squash Centre）' },
+  { name:'Eastern',         zh:'東區',   type:'general',  lat:22.28288, lon:114.21937, addr:'西灣河消防局（Sai Wan Ho Fire Station, 20 Wai Hang Street）' },
+  { name:'Kwun Tong',       zh:'觀塘',   type:'general',  lat:22.31332, lon:114.22482, addr:'裕華大廈（Yue Wah Mansion, 407-431 Kwun Tong Road）' },
+  { name:'Sham Shui Po',    zh:'深水埗', type:'general',  lat:22.33022, lon:114.15910, addr:'深水埗警署（Sham Shui Po Police Station, 37A Yen Chow Street）' },
+  { name:'Kwai Chung',      zh:'葵涌',   type:'general',  lat:22.35710, lon:114.12959, addr:'葵涌警署（Kwai Chung Police Station, 999 Kwai Chung Road）' },
+  { name:'Tsuen Wan',       zh:'荃灣',   type:'general',  lat:22.37174, lon:114.11453, addr:'雅麗珊社區中心（Princess Alexandra Community Centre, 60 Tai Ho Road）' },
+  { name:'Tseung Kwan O',   zh:'將軍澳', type:'general',  lat:22.31764, lon:114.25956, addr:'將軍澳體育館（Tseung Kwan O Sports Centre, 9 Wan Lung Road）' },
+  { name:'Yuen Long',       zh:'元朗',   type:'general',  lat:22.44515, lon:114.02264, addr:'元朗政務處大樓（Yuen Long District Office Building, 269 Castle Peak Road）' },
+  { name:'Tuen Mun',        zh:'屯門',   type:'general',  lat:22.39114, lon:113.97672, addr:'屯門公共圖書館（Tuen Mun Public Library, 1 Tuen Hi Road）' },
+  { name:'Tung Chung',      zh:'東涌',   type:'general',  lat:22.28888, lon:113.94365, addr:'東涌健康中心（Tung Chung Health Centre, 6 Fu Tung Street）' },
+  { name:'Tai Po',          zh:'大埔',   type:'general',  lat:22.45096, lon:114.16457, addr:'大埔政府合署（Tai Po Government Offices Building, 1 Ting Kok Road）' },
+  { name:'Sha Tin',         zh:'沙田',   type:'general',  lat:22.37627, lon:114.18453, addr:'沙田官立中學（Sha Tin Government Secondary School, 11-17 Man Lai Road）' },
+  { name:'North',           zh:'北區',   type:'general',  lat:22.49694, lon:114.12842, addr:'保榮路體育館（Po Wing Road Sports Centre, Sheung Shui）' },
+  { name:'Tap Mun',         zh:'塔門',   type:'general',  lat:22.47131, lon:114.36071, addr:'塔門（Tap Mun）' },
+  { name:'Causeway Bay',    zh:'銅鑼灣', type:'roadside', lat:22.28013, lon:114.18508, addr:'怡和街1號（1 Yee Wo Street）' },
+  { name:'Central',         zh:'中環',   type:'roadside', lat:22.28181, lon:114.15813, addr:'遮打道與德輔道中交界（Chater Road × Des Voeux Road Central）' },
+  { name:'Mong Kok',        zh:'旺角',   type:'roadside', lat:22.32261, lon:114.16826, addr:'彌敦道與荔枝角道交界（Nathan Road × Lai Chi Kok Road）' },
+];
+
+/* ============================================================
+   區塊 3：變量定義與「簡單分級配色」
+   - steps  ：分級閾值（升序），配合 BAND_COLORS 形成 5 級配色
+   - labels ：各等級文字標籤
+   - source ：epd = 環保署實測發布；cams = Open-Meteo/CAMS 模擬值
+   閾值為教學用簡化分級（參考香港空氣質素指標 AQO 及 WHO 指引量級），
+   AQHI 分級則採用環保署官方定義（1-3 低 / 4-6 中 / 7 高 / 8-10 甚高 / 10+ 嚴重）
+   ============================================================ */
+const BAND_COLORS = ['#2e7d32', '#f9a825', '#ef6c00', '#c62828', '#6a1b9a'];
+
+const VARS = [
+  { key:'aqhi', label:'AQHI',   fullName:'空氣質素健康指數 Air Quality Health Index', unit:'',       source:'epd',
+    steps:[3, 6, 7, 10],            labels:['低 Low','中 Moderate','高 High','甚高 Very High','嚴重 Serious'] },
+  { key:'no2',  label:'NO₂',    fullName:'二氧化氮 Nitrogen Dioxide',                 unit:'μg/m³', source:'cams',
+    steps:[40, 80, 150, 250],       labels:['良好 Good','一般 Fair','偏高 Elevated','高 High','嚴重 Severe'] },
+  { key:'o3',   label:'O₃',     fullName:'臭氧 Ozone',                                unit:'μg/m³', source:'cams',
+    steps:[50, 100, 160, 240],      labels:['良好 Good','一般 Fair','偏高 Elevated','高 High','嚴重 Severe'] },
+  { key:'so2',  label:'SO₂',    fullName:'二氧化硫 Sulphur Dioxide',                  unit:'μg/m³', source:'cams',
+    steps:[40, 80, 150, 300],       labels:['良好 Good','一般 Fair','偏高 Elevated','高 High','嚴重 Severe'] },
+  { key:'pm25', label:'PM2.5',  fullName:'微細懸浮粒子 Fine Suspended Particulates',  unit:'μg/m³', source:'cams',
+    steps:[15, 35, 75, 115],        labels:['良好 Good','一般 Fair','偏高 Elevated','高 High','嚴重 Severe'] },
+  { key:'pm10', label:'PM10',   fullName:'可吸入懸浮粒子 Respirable Suspended Particulates', unit:'μg/m³', source:'cams',
+    steps:[50, 100, 150, 250],      labels:['良好 Good','一般 Fair','偏高 Elevated','高 High','嚴重 Severe'] },
+];
+// 由 key 快速查找變量定義
+const VAR_MAP = Object.fromEntries(VARS.map(v => [v.key, v]));
+
+/* ============================================================
+   區塊 4：全局運行狀態
+   - aqhiData / camsData：以站名為主鍵的實時數據字典（空間融合結果）
+   - markers：站名 → Leaflet 標記 對照表
+   - colorMetric：當前地圖著色指標（須始終屬於已勾選集合）
+   ============================================================ */
+const state = {
+  aqhiData: {},      // { 'Central/Western': {aqhi:2, risk:'Low', time:'2026-08-21T09:30:00'}, ... }
+  camsData: {},      // { 'Central/Western': {no2:.., o3:.., so2:.., pm25:.., pm10:.., time:'...'}, ... }
+  markers: {},
+  colorMetric: 'aqhi',
+};
+let map = null;                 // Leaflet 地圖實例
+let countdownSec = POLL_INTERVAL_MS / 1000;  // 下次自動更新倒數（秒）
+
+/* ============================================================
+   區塊 5：地圖初始化
+   - 底圖採用 OpenStreetMap 標準瓦片
+   - fitBounds 僅在初始化時調用一次以框住全部站点；
+     之後的輪詢刷新【絕不】重置地圖視角（保留用戶當前縮放/平移狀態）
+   ============================================================ */
+function initMap() {
+  map = L.map('map');
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    maxZoom: 19,
+    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+  }).addTo(map);
+  const bounds = L.latLngBounds(STATIONS.map(s => [s.lat, s.lon]));
+  map.fitBounds(bounds.pad(0.08));
+}
+
+/* ============================================================
+   區塊 6：為每個監測站創建 Marker（圓形標記）
+   - 初始灰色；取得數據後按著色指標數值動態變色
+   - 綁定 hover 提示（中英站名）與點擊彈窗
+   ============================================================ */
+function createMarkers() {
+  STATIONS.forEach(st => {
+    const m = L.circleMarker([st.lat, st.lon], {
+      radius: 9, weight: 2, color: '#ffffff',
+      fillColor: '#9e9e9e', fillOpacity: 0.95,
+    }).addTo(map);
+    m.bindTooltip(`${st.zh} ${st.name}`, { direction: 'top' });
+    m.bindPopup('載入中…');
+    state.markers[st.name] = m;
+  });
+}
+
+/* ============================================================
+   區塊 7：分級配色工具函數
+   getBandIndex(key, value) → 返回 0-4 的等級序號；無效值返回 null
+   ============================================================ */
+function getBandIndex(key, value) {
+  if (value === null || value === undefined || Number.isNaN(Number(value))) return null;
+  const v = value;
+  for (let i = 0; i < VAR_MAP[key].steps.length; i++) {
+    if (v <= VAR_MAP[key].steps[i]) return i;
+  }
+  return VAR_MAP[key].steps.length; // 超過最高閾值 → 最高等級
+}
+
+/* ============================================================
+   區塊 8：彈窗內容構建
+   只展示【當前已勾選】的變量；附帶數據更新時間與來源標註
+   ============================================================ */
+function buildPopup(st) {
+  const aqhi = state.aqhiData[st.name];
+  const cams = state.camsData[st.name];
+  const checked = getCheckedKeys();
+
+  let html =
+    `<b>${st.zh} ${st.name}</b>` +
+    ` <span class="badge ${st.type}">${st.type === 'roadside' ? '路邊站 Roadside' : '一般站 General'}</span><br>` +
+    `<small>${st.addr}</small><hr>`;
+
+  checked.forEach(key => {
+    const v = VAR_MAP[key];
+    if (key === 'aqhi') {
+      // AQHI：環保署實測發布值
+      if (aqhi) {
+        const band = getBandIndex('aqhi', aqhi.aqhi);
+        html += `<b>AQHI：</b>` +
+          `<span class="chip" style="background:${BAND_COLORS[band]}">${aqhi.aqhi}</span> ` +
+          `${RISK_ZH[aqhi.risk] || aqhi.risk} <small>(EPD official 環保署實測)</small><br>`;
+      } else {
+        html += `<b>AQHI：</b><span class="na">No data 暫無數據</span><br>`;
+      }
+    } else {
+      // 污染物：Open-Meteo/CAMS 模擬濃度
+      if (cams && cams[key] !== null && cams[key] !== undefined) {
+        const band = getBandIndex(key, cams[key]);
+        html += `<b>${v.label}：</b>` +
+          `<span class="chip" style="background:${BAND_COLORS[band]}">${Number(cams[key]).toFixed(1)}</span> ` +
+          `${v.unit} ${v.labels[band]} <small>(modelled 模擬)</small><br>`;
+      } else {
+        html += `<b>${v.label}：</b><span class="na">—</span><br>`;
+      }
+    }
+  });
+
+  html += `<hr><small>🕐 AQHI publish time 發布時間：${aqhi ? String(aqhi.time).replace('T', ' ') : '—'}<br>` +
+          `🕐 Modelled concentration time 模擬濃度時間：${cams && cams.time ? String(cams.time).replace('T', ' ') : '—'} (HKT)<br>` +
+          `⚠️ Modelled values may differ from actual measurements 模擬值或與實際測量有偏差，僅供參考</small>`;
+  return html;
+}
+// AQHI 健康風險等級中英文對照
+const RISK_ZH = { 'Low':'低 Low', 'Moderate':'中 Moderate', 'High':'高 High', 'Very High':'甚高 Very High', 'Serious':'嚴重 Serious' };
+
+/* ============================================================
+   區塊 9：地圖標記重繪（每次數據刷新或著色指標切換後調用）
+   - setStyle 原地改色，不移動地圖視角
+   - 若某站彈窗正處於打開狀態，同步刷新其內容
+   ============================================================ */
+function renderMarkers() {
+  STATIONS.forEach(st => {
+    const m = state.markers[st.name];
+    let val = null;
+    if (state.colorMetric === 'aqhi') {
+      val = state.aqhiData[st.name] ? state.aqhiData[st.name].aqhi : null;
+    } else if (state.camsData[st.name]) {
+      val = state.camsData[st.name][state.colorMetric];
+    }
+    const band = getBandIndex(state.colorMetric, val);
+    m.setStyle({ fillColor: band === null ? '#9e9e9e' : BAND_COLORS[band] });
+    m.setPopupContent(buildPopup(st));
+    if (m.isPopupOpen()) m.setPopupContent(buildPopup(st));
+  });
+}
+
+/* ============================================================
+   區塊 10：圖例渲染（跟隨當前著色指標動態更新）
+   ============================================================ */
+function renderLegend() {
+  const v = VAR_MAP[state.colorMetric];
+  let html = `<div style="font-size:12px;margin-bottom:4px"><b>${v.fullName} (${v.label}${v.unit ? ', ' + v.unit : ''})</b></div>`;
+  for (let i = 0; i <= v.steps.length; i++) {
+    const lo = i === 0 ? null : v.steps[i - 1];
+    const hi = i === v.steps.length ? null : v.steps[i];
+    const range =
+      lo === null ? `≤ ${hi}` :
+      hi === null ? `> ${lo}` :
+      `${lo} – ${hi}`;
+    html += `<div class="legend-row"><span class="legend-swatch" style="background:${BAND_COLORS[i]}"></span>${range}${v.labels[i] ? '　' + v.labels[i] : ''}</div>`;
+  }
+  document.getElementById('legend').innerHTML = html;
+}
+
+/* ============================================================
+   區塊 11：全站數據表格渲染
+   表頭隨勾選變量動態增減；單元格按各自變量的分級配色顯示色塊
+   ============================================================ */
+function renderTable() {
+  const checked = getCheckedKeys();
+  const tbl = document.getElementById('data-table');
+
+  let html = '<thead><tr><th rowspan="2">監測站<br>Station</th><th rowspan="2">類型<br>Type</th>';
+  checked.forEach(k => { html += `<th>${VAR_MAP[k].label}</th>`; });
+  html += '</tr><tr>';
+  checked.forEach(k => { html += `<th><small>${VAR_MAP[k].unit || 'index 指數'}</small></th>`; });
+  html += '</tr></thead><tbody>';
+
+  STATIONS.forEach(st => {
+    html += `<tr><td class="stn">${st.zh}<br><small>${st.name}</small></td>` +
+            `<td><small>${st.type === 'roadside' ? '路邊 Roadside' : '一般 General'}</small></td>`;
+    checked.forEach(k => {
+      let val = null;
+      if (k === 'aqhi') val = state.aqhiData[st.name] ? state.aqhiData[st.name].aqhi : null;
+      else if (state.camsData[st.name]) val = state.camsData[st.name][k];
+      const band = getBandIndex(k, val);
+      html += band === null
+        ? '<td><span class="na">—</span></td>'
+        : `<td><span class="chip" style="background:${BAND_COLORS[band]}">${Number(val).toFixed(k === 'aqhi' ? 0 : 1)}</span></td>`;
+    });
+    html += '</tr>';
+  });
+  html += '</tbody>';
+  tbl.innerHTML = html;
+}
+
+/* ============================================================
+   區塊 12：控件生成（著色指標單選組 + 顯示變量複選組）
+   - 複選框默認全部勾選
+   - 取消勾選時若恰好取消的是當前著色指標，自動回退到第一個仍勾選的變量
+   ============================================================ */
+function buildControls() {
+  const radioBox = document.getElementById('metric-radios');
+  const checkBox = document.getElementById('var-checkboxes');
+
+  VARS.forEach(v => {
+    // 著色指標單選
+    const rLabel = document.createElement('label');
+    rLabel.innerHTML = `<input type="radio" name="color-metric" value="${v.key}" ${v.key === state.colorMetric ? 'checked' : ''}> ${v.label}`;
+    rLabel.querySelector('input').addEventListener('change', () => {
+      state.colorMetric = v.key;
+      renderLegend();
+      renderMarkers();
+    });
+    radioBox.appendChild(rLabel);
+
+    // 顯示變量複選（默認全選）
+    const cLabel = document.createElement('label');
+    cLabel.innerHTML = `<input type="checkbox" value="${v.key}" checked> ${v.label}`;
+    cLabel.querySelector('input').addEventListener('change', () => {
+      syncColorMetric();   // 維持「著色指標必須已勾選」的不變式
+      renderLegend();
+      renderMarkers();     // 彈窗、標記、表格三者同步更新
+      renderTable();
+    });
+    checkBox.appendChild(cLabel);
+  });
+}
+
+// 讀取當前勾選的變量 key 列表
+function getCheckedKeys() {
+  return Array.from(document.querySelectorAll('#var-checkboxes input:checked')).map(i => i.value);
+}
+// 若當前著色指標被取消勾選，自動切換到第一個仍勾選的變量
+function syncColorMetric() {
+  const checked = getCheckedKeys();
+  if (!checked.includes(state.colorMetric) && checked.length > 0) {
+    state.colorMetric = checked[0];
+    const radio = document.querySelector(`#metric-radios input[value="${state.colorMetric}"]`);
+    if (radio) radio.checked = true;
+  }
+}
+
+/* ============================================================
+   區塊 13：數據抓取（JSON 解析 + 錯誤捕獲）
+   ------------------------------------------------------------
+   來源 A：環保署 AQHI 實時 JSON（18 站，含發布時間）
+   返回示例：[{station:"Central/Western", aqhi:2, health_risk:"Low",
+              publish_date:"2026-08-21T09:30:00"}, ...]
+   ============================================================ */
+async function fetchAQHI() {
+  const res = await fetch(AQHI_API_URL);
+  if (!res.ok) throw new Error(`AQHI API HTTP ${res.status}`);
+  const arr = await res.json();
+  if (!Array.isArray(arr)) throw new Error('AQHI API 返回格式異常');
+  const out = {};
+  arr.forEach(r => {
+    out[r.station] = { aqhi: Number(r.aqhi), risk: r.health_risk, time: r.publish_date };
+  });
+  return out;
+}
+
+/* ------------------------------------------------------------
+   來源 B：Open-Meteo 空氣質素 API（CAMS 模擬濃度，免密鑰、CORS 開放）
+   技巧：把 18 個站點坐標以逗號串接，一次請求批量返回（順序與輸入一致）
+   這是「靜態地理元數據 × 實時觀測數據」空間融合的第二條數據通道
+   ============================================================ */
+async function fetchCAMS() {
+  const lats = STATIONS.map(s => s.lat).join(',');
+  const lons = STATIONS.map(s => s.lon).join(',');
+  const url = `${OPEN_METEO_URL}?latitude=${lats}&longitude=${lons}` +
+              `&current=pm10,pm2_5,nitrogen_dioxide,ozone,sulphur_dioxide&timezone=Asia%2FHong_Kong`;
+  const res = await fetch(url);
+  if (!res.ok) throw new Error(`Open-Meteo HTTP ${res.status}`);
+  let data = await res.json();
+  if (!Array.isArray(data)) data = [data]; // 單點時 API 返回對象而非數組
+  if (data.length !== STATIONS.length) throw new Error('Open-Meteo 返回站點數不符');
+
+  const out = {};
+  data.forEach((rec, i) => {
+    const c = rec.current || {};
+    out[STATIONS[i].name] = {
+      no2:  c.nitrogen_dioxide ?? null,
+      o3:   c.ozone ?? null,
+      so2:  c.sulphur_dioxide ?? null,
+      pm25: c.pm2_5 ?? null,
+      pm10: c.pm10 ?? null,
+      time: c.time ?? null,
+    };
+  });
+  return out;
+}
+
+/* ============================================================
+   區塊 14：統一刷新流程
+   - Promise.allSettled：任一來源失敗不影響另一來源正常展示
+   - 失敗時在頁面頂部橫幅提示，並保留最近一次成功數據
+   - 成功後重繪標記與表格（不改變勾選狀態、不重置地圖視角）
+   ============================================================ */
+async function refreshAll() {
+  document.getElementById('status-text').textContent = 'Updating data 正在更新數據…';
+  const [rAqhi, rCams] = await Promise.allSettled([fetchAQHI(), fetchCAMS()]);
+
+  const failed = [];
+  if (rAqhi.status === 'fulfilled') state.aqhiData = rAqhi.value;
+  else failed.push('Failed to fetch EPD AQHI data 環保署 AQHI 數據獲取失敗');
+  if (rCams.status === 'fulfilled') state.camsData = rCams.value;
+  else failed.push('Failed to fetch modelled pollutant data (Open-Meteo) 污染物模擬數據獲取失敗');
+
+  renderMarkers();
+  renderTable();
+
+  const banner = document.getElementById('error-banner');
+  if (failed.length) {
+    banner.textContent = '⚠️ ' + failed.join('; ') +
+      ' — showing the last successfully retrieved data 目前顯示最近一次成功取得的數據。';
+    banner.hidden = false;
+  } else {
+    banner.hidden = true;
+  }
+
+  countdownSec = POLL_INTERVAL_MS / 1000; // 重置自動更新倒數
+  updateStatusText(new Date());
+}
+
+/* ============================================================
+   區塊 15：狀態欄與倒數計時
+   ============================================================ */
+function updateStatusText(now) {
+  const t = now.toLocaleTimeString('zh-HK', { hour12: false });
+  document.getElementById('status-text').textContent =
+    `Last updated 最後更新：${t} | Auto-refresh 自動更新 in ${countdownSec}s`;
+}
+setInterval(() => {
+  if (countdownSec > 0) countdownSec--;
+  updateStatusText(new Date());
+}, 1000);
+
+/* ============================================================
+   區塊 16：手動刷新按鈕 + 自動輪詢定時器（300 秒）
+   注意：輪詢只替換數據並原地重繪，絕不重建地圖，
+        因此用戶的勾選狀態與地圖視角天然得以保留
+   ============================================================ */
+document.getElementById('btn-refresh').addEventListener('click', refreshAll);
+
+/* ============================================================
+   區塊 17：應用入口
+   ============================================================ */
+window.addEventListener('DOMContentLoaded', () => {
+  if (typeof L === 'undefined') { // Leaflet CDN 加載失敗的兜底提示
+    const banner = document.getElementById('error-banner');
+    banner.textContent = '⚠️ Failed to load the Leaflet map library. Please check your network connection and reload the page. Leaflet 地圖庫加載失敗，請檢查網絡連接後重新載入頁面。';
+    banner.hidden = false;
+    return;
+  }
+  initMap();          // 初始化地圖與底圖
+  createMarkers();    // 建立 18 個站點標記
+  buildControls();    // 生成單選/複選控件
+  renderLegend();     // 渲染初始圖例
+  refreshAll();       // 首次抓取並渲染
+  setInterval(refreshAll, POLL_INTERVAL_MS); // 啟動 300 秒自動輪詢
+});
+</script>
+</body>
+</html>
