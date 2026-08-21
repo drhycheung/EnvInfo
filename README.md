@@ -117,6 +117,13 @@ authoritative reference. This project complements rather than replaces it: the f
 intuitive at-a-glance visualisation, with data provenance labelled honestly and users pointed
 back to EPD for authoritative readings.
 
+> [!TIP]
+> In this sense, the project is **not unique** — official and third-party air quality dashboards
+> already exist. That is by design: it is a teaching baseline, not a novel product. Students are
+> encouraged to explore extensions of this project, or similar projects of their own — new data
+> layers, analyses, audiences or services — so that what they build brings genuinely unique value
+> to environmental management.
+
 ## 6. Student reproduction prompt
 
 Give the prompt below to Gemini, OpenCode, Claude, ChatGPT or any coding agent. It encodes every
