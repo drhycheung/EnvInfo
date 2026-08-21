@@ -110,13 +110,12 @@ Hong Kong's air quality data exist, but they are not intuitive.
 Intuition was treated as the measurable outcome: every design decision traces back to reducing
 the time from "open page" to "understood the air".
 
-**Benchmark against the official service**: EPD operates its own air quality website/dashboard at
+**Benchmark against the official service**: EPD operates its own air quality website at
 [www.aqhi.gov.hk](https://www.aqhi.gov.hk). Its pollutant figures are **more accurate** —
-direct measurements from the monitoring stations rather than modelled values — but the
-presentation is **less intuitive**: there is no map view, so spatial comparison and at-a-glance
-status are lost. This project deliberately trades some measurement accuracy for much greater
-usability, while labelling data provenance honestly and pointing users back to EPD for
-authoritative readings.
+direct measurements from the monitoring stations rather than modelled values — and remain the
+authoritative reference. This project complements rather than replaces it: the focus here is on
+intuitive at-a-glance visualisation, with data provenance labelled honestly and users pointed
+back to EPD for authoritative readings.
 
 ## 6. Student reproduction prompt
 
