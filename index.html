@@ -162,7 +162,9 @@ main { display: flex; flex: 1 1 auto; min-height: 0; }
       <a href="https://open-meteo.com/" target="_blank" rel="noopener">Air quality data by Open-Meteo.com</a>,
       licensed 採用 <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener">CC BY 4.0</a>;
       underlying data 底層數據: Copernicus Atmosphere Monitoring Service (CAMS) / ECMWF.<br>
-      ③ Basemap 底圖: © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap contributors</a>;
+      ③ Basemap 底圖: &copy; <a href="https://www.esri.com/" target="_blank" rel="noopener">Esri</a> (Canvas World Light Gray Base) &mdash;
+      Source: Esri, HERE, Garmin, &copy;
+      <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap contributors</a>;
       map library 地圖庫: <a href="https://leafletjs.com" target="_blank" rel="noopener">Leaflet</a>.
     </footer>
   </aside>
@@ -259,15 +261,26 @@ let countdownSec = POLL_INTERVAL_MS / 1000;  // 下次自動更新倒數（秒�
 
 /* ============================================================
    區塊 5：地圖初始化
-   - 底圖採用 OpenStreetMap 標準瓦片
+   - 底圖採用 Esri Canvas World Light Gray Base
    - fitBounds 僅在初始化時調用一次以框住全部站点；
      之後的輪詢刷新【絕不】重置地圖視角（保留用戶當前縮放/平移狀態）
    ============================================================ */
 function initMap() {
   map = L.map('map');
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    maxZoom: 19,
-    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+  // 【為何不用 OpenStreetMap 官方瓦片】
+  // 本頁支援「雙擊檔案以 file:// 直接開啟」。OSM 官方瓦片伺服器要求每個請求
+  // 必須帶有 Referer 標頭（Referer requirement），但 file:// 頁面無法送出
+  // Referer，OSM 便會回傳 HTTP 200、卻以一張「Access blocked: App is not
+  // following the tile usage policy」的拒絕圖片（約 6,987 bytes）取代真正的
+  // 瓦片，令地圖在離線開啟時全變灰色格子。（<meta name="referrer"> 在 file://
+  // 下無效，CARTO 底圖現已需要 API key，均不能解決此問題。）
+  // 因此改用 Esri Canvas Light Gray 底圖：其瓦片不要求 Referer，file:// 與
+  // http(s) 兩種情況下均可正常顯示，且為淺色底圖，與彩色標記對比清晰。
+  // 注意兩個易錯點：① Esri 的路徑順序為 {z}/{y}/{x}（與 OSM 的 {z}/{x}/{y} 相反）；
+  //              ② maxZoom 只可為 16，因該底圖在 zoom 16 之後並無資料。
+  L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}', {
+    attribution: 'Tiles &copy; <a href="https://www.esri.com/" target="_blank" rel="noopener">Esri</a> &mdash; Source: Esri, HERE, Garmin, &copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> contributors',
+    maxZoom: 16
   }).addTo(map);
   const bounds = L.latLngBounds(STATIONS.map(s => [s.lat, s.lon]));
   map.fitBounds(bounds.pad(0.08));
@@ -373,6 +386,11 @@ function renderMarkers() {
 
 /* ============================================================
    區塊 10：圖例渲染（跟隨當前著色指標動態更新）
+   ⚠️ 區間文字必須與 getBandIndex() 的分級邏輯完全一致：
+        getBandIndex 用 `value <= steps[i]` 判定，即 steps[i] 本身屬於第 i 級。
+        故各級區間為「上一個閾值之後、至本個閾值為止」，下界須排除（用 > 而非 –），
+        否則相鄰兩級會共用同一個閾值數字，令圖例出現重疊區間。
+        例：AQHI steps=[3,6,7,10] → ≤3 / >3–6 / >6–7 / >7–10 / >10（= 1-3/4-6/7/8-10/>10）
    ============================================================ */
 function renderLegend() {
   const v = VAR_MAP[state.colorMetric];
@@ -383,7 +401,7 @@ function renderLegend() {
     const range =
       lo === null ? `≤ ${hi}` :
       hi === null ? `> ${lo}` :
-      `${lo} – ${hi}`;
+      `> ${lo} – ${hi}`;
     html += `<div class="legend-row"><span class="legend-swatch" style="background:${BAND_COLORS[i]}"></span>${range}${v.labels[i] ? '　' + v.labels[i] : ''}</div>`;
   }
   document.getElementById('legend').innerHTML = html;
