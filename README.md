@@ -98,7 +98,7 @@ oversights:
 | Document | What it covers |
 |---|---|
 | **[Basemap notes](docs/basemap.md)** | Why the basemap is Esri rather than OpenStreetMap — the `file://` `Referer` trap that silently returns `HTTP 200` with a refusal image, the three fixes that do *not* work, the `{z}/{y}/{x}` and `maxZoom: 16` traps, and how to verify a tile layer by byte size instead of by eye |
-| **[Vibe-coding guide](docs/vibe-coding.md)** | The teaching pack for reproducing this project with an AI coding tool: the design-thinking rationale, how the dashboard was actually built, the complete copy-paste prompt, the learning outcomes, and the assessment rubric |
+| **[Vibe-coding guide](docs/vibe-coding.md)** | The design-thinking rationale behind the dashboard, how it was actually built with an AI coding tool, and the complete copy-paste prompt to reproduce it |
 
 ## 6. Licences & attribution
 
