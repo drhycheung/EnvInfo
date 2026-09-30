@@ -5,17 +5,17 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>香港空氣質素互動儀表板 | Hong Kong Air Quality Dashboard</title>
 
-<!-- 內嵌 SVG 圖示：避免瀏覽器請求 /favicon.ico 而產生 404 主控台錯誤 -->
+<!-- Inline SVG favicon: stops the browser requesting /favicon.ico and logging a 404 -->
 <link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2032%2032%22%3E%3Crect%20width%3D%2232%22%20height%3D%2232%22%20rx%3D%226%22%20fill%3D%22%23eceff1%22%2F%3E%3Ccircle%20cx%3D%2216%22%20cy%3D%2216%22%20r%3D%228%22%20fill%3D%22%232e7d32%22%20stroke%3D%22%23fff%22%20stroke-width%3D%222.5%22%2F%3E%3C%2Fsvg%3E">
 
 <!-- ============================================================
-     Leaflet.js 地圖庫（僅外部依賴，經 CDN 引入，無需本地文件）
+     Leaflet.js map library (the only external dependency, loaded from a CDN - no local file)
      ============================================================ -->
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 
 <style>
 /* ============================================================
-   全局樣式：桌面端優先，左右兩欄佈局
+   Global styles: desktop-first, two-column layout
    ============================================================ */
 * { box-sizing: border-box; margin: 0; padding: 0; }
 html, body { height: 100%; }
@@ -25,7 +25,7 @@ body {
   color: #1f2937; background: #f3f4f6;
 }
 
-/* ---------- 頂部標題欄 ---------- */
+/* ---------- Top title bar ---------- */
 header {
   background: #0d3b66; color: #fff;
   display: flex; align-items: center; justify-content: space-between;
@@ -41,14 +41,14 @@ header .subtitle { font-size: 12px; opacity: .85; }
 }
 #btn-refresh:hover { background: #f9e28f; }
 
-/* ---------- 錯誤提示橫幅（網絡請求失敗時顯示） ---------- */
+/* ---------- Error banner (shown when a network request fails) ---------- */
 #error-banner {
   background: #b3261e; color: #fff; font-size: 14px;
   padding: 8px 18px; flex: 0 0 auto;
 }
 #error-banner[hidden] { display: none; }
 
-/* ---------- 主體：左地圖 + 右側邊欄 ---------- */
+/* ---------- Main body: map on the left + sidebar on the right ---------- */
 main { display: flex; flex: 1 1 auto; min-height: 0; }
 #map-wrap { flex: 1 1 auto; min-width: 0; }
 #map { width: 100%; height: 100%; }
@@ -65,16 +65,16 @@ main { display: flex; flex: 1 1 auto; min-height: 0; }
 }
 .panel h2 small { color: #6b7280; font-weight: 400; }
 
-/* ---------- 控件（單選/複選） ---------- */
+/* ---------- Controls (radio buttons / checkboxes) ---------- */
 .ctrl-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 4px 10px; }
 .ctrl-grid label { font-size: 13px; cursor: pointer; user-select: none; }
 .note { font-size: 11px; color: #6b7280; margin-top: 6px; line-height: 1.5; }
 
-/* ---------- 圖例 ---------- */
+/* ---------- Legend ---------- */
 #legend .legend-row { display: flex; align-items: center; gap: 8px; font-size: 12px; margin: 3px 0; }
 .legend-swatch { width: 14px; height: 14px; border-radius: 3px; flex: 0 0 auto; }
 
-/* ---------- 數據表格 ---------- */
+/* ---------- Data table ---------- */
 .table-scroll { overflow-x: auto; }
 #data-table { width: 100%; border-collapse: collapse; font-size: 12px; }
 #data-table th, #data-table td { border: 1px solid #e5e7eb; padding: 6px 8px; text-align: center; }
@@ -87,14 +87,14 @@ main { display: flex; flex: 1 1 auto; min-height: 0; }
 }
 .na { color: #9ca3af; }
 
-/* ---------- 資料來源聲明（頁腳） ---------- */
+/* ---------- Data source statement (footer) ---------- */
 #attribution {
   margin-top: auto; padding: 12px 16px;
   font-size: 11px; color: #6b7280; line-height: 1.7; background: #f9fafb;
 }
 #attribution a { color: #2563eb; }
 
-/* Leaflet 彈窗字體微調 */
+/* Leaflet popup font tweak */
 .leaflet-popup-content { font-size: 13px; line-height: 1.55; }
 .badge {
   display: inline-block; padding: 0 6px; border-radius: 3px;
@@ -106,7 +106,7 @@ main { display: flex; flex: 1 1 auto; min-height: 0; }
 </head>
 <body>
 
-<!-- ================= 頂部標題欄 ================= -->
+<!-- ================= Top title bar ================= -->
 <header>
   <div>
     <h1>香港空氣質素互動儀表板</h1>
@@ -118,23 +118,23 @@ main { display: flex; flex: 1 1 auto; min-height: 0; }
   </div>
 </header>
 
-<!-- ================= 錯誤橫幅（請求失敗時顯示） ================= -->
+<!-- ================= Error banner (shown when a request fails) ================= -->
 <div id="error-banner" hidden></div>
 
-<!-- ================= 主體區域 ================= -->
+<!-- ================= Main body ================= -->
 <main>
-  <!-- ① 左側：Leaflet 交互式地圖主視圖 -->
+  <!-- 1. Left: the main Leaflet interactive map -->
   <section id="map-wrap"><div id="map"></div></section>
 
-  <!-- ② 右側：控制面板 + 數據表格面板 -->
+  <!-- 2. Right: control panel + data table panel -->
   <aside id="sidebar">
 
     <div class="panel">
       <h2>地圖著色指標 <small>Marker colour metric</small></h2>
-      <div id="metric-radios" class="ctrl-grid"><!-- 由 JS 動態生成 --></div>
+      <div id="metric-radios" class="ctrl-grid"><!-- generated dynamically by JS --></div>
 
       <h2 style="margin-top:14px">顯示變量 <small>Variables to display</small></h2>
-      <div id="var-checkboxes" class="ctrl-grid"><!-- 由 JS 動態生成 --></div>
+      <div id="var-checkboxes" class="ctrl-grid"><!-- generated dynamically by JS --></div>
       <p class="note">Tick to show only the selected variables in the map popups and the table below.
       勾選後，地圖彈窗與下方數據表將同步只顯示所選變量。<br>
       Pollutant concentrations are Open-Meteo/CAMS modelled values (not in-situ measurements);
@@ -142,19 +142,19 @@ main { display: flex; flex: 1 1 auto; min-height: 0; }
       污染物濃度為 Open-Meteo/CAMS 大氣模擬值（非站內實測）；AQHI 為環保署實測發布值。</p>
 
       <h2 style="margin-top:14px">圖例 <small>Legend</small></h2>
-      <div id="legend"><!-- 由 JS 動態生成 --></div>
+      <div id="legend"><!-- generated dynamically by JS --></div>
     </div>
 
     <div class="panel">
       <h2>全站數據表 <small>All stations</small></h2>
       <div class="table-scroll">
-        <table id="data-table"><!-- 由 JS 動態生成 --></table>
+        <table id="data-table"><!-- generated dynamically by JS --></table>
       </div>
       <p class="note">⚠️ Modelled pollutant values may differ from actual station measurements and are for reference only.
       模擬污染物數值或與監測站實際測量結果存在偏差，僅供參考。</p>
     </div>
 
-    <!-- 資料來源與版權聲明（開放數據合規要求） -->
+    <!-- Data source and licence statement (open data compliance requirement) -->
     <footer id="attribution">
       <b>資料來源 Data Sources</b><br>
       ① AQHI health index 空氣質素健康指數：Environmental Protection Department, HKSAR Government
@@ -173,31 +173,33 @@ main { display: flex; flex: 1 1 auto; min-height: 0; }
   </aside>
 </main>
 
-<!-- Leaflet JS（經 CDN 引入） -->
+<!-- Leaflet JS (loaded from a CDN) -->
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
 <script>
 'use strict';
 /* ============================================================
-   區塊 1：全局配置
-   - AQHI_API_URL   ：環保署「個別監測站空氣質素健康指數」實時 JSON
-                      （CORS 開放 access-control-allow-origin:*，瀏覽器可直接抓取）
-   - OPEN_METEO_URL ：Open-Meteo 空氣質素 API（CORS 開放、免密鑰）
-                      提供五種污染物的 CAMS 模擬濃度；支援一次請求查詢多個坐標
-   - POLL_INTERVAL_MS：自動輪詢間隔 = 300 秒
+   Section 1: global configuration
+   - AQHI_API_URL   : EPD real-time per-station AQHI JSON
+                      (CORS-open, access-control-allow-origin:*, so a browser can fetch it directly)
+   - OPEN_METEO_URL : Open-Meteo air quality API (CORS-open, no API key)
+                      CAMS modelled concentrations for five pollutants; many coordinates per request
+   - POLL_INTERVAL_MS: auto-poll interval = 300 seconds
    ============================================================ */
 const AQHI_API_URL    = 'https://dashboard.data.gov.hk/api/aqhi-individual?format=json';
 const OPEN_METEO_URL  = 'https://air-quality-api.open-meteo.com/v1/air-quality';
 const POLL_INTERVAL_MS = 300 * 1000;
 
 /* ============================================================
-   區塊 2：18 個監測站靜態元數據（硬編碼）
-   ⚠️ name 欄位必須與官方 API 返回的 station 名稱文本完全一致
-     （已逐一核對 aqhi-individual JSON 與 24pc_Eng.xml 的 StationName）
-   坐標來源：
-   - 16 站：DATA.GOV.HK City Dashboard 官方站點地址表（郵政地址對應坐標）
-   - 南區／北區兩新站（2020 年啟用）：官方新聞公報公佈的站址
-     （香港仔網球及壁球中心天台、上水保榮路體育館），坐標取自 OSM 建築物位置
+   Section 2: static metadata for the 18 monitoring stations (hard-coded)
+   WARNING: the name field must match the official API's station string exactly
+     (checked one by one against the aqhi-individual JSON and the StationName values in 24pc_Eng.xml)
+   Coordinate sources:
+   - 16 stations: the official station address table on the DATA.GOV.HK City Dashboard,
+     with coordinates geocoded from each station's postal address
+   - the two newer Southern / North stations (opened in 2020): addresses published in an
+     official press release (Aberdeen Tennis and Squash Centre rooftop; Po Wing Road Sports
+     Centre), with coordinates taken from the OSM building positions
    ============================================================ */
 const STATIONS = [
   { name:'Central/Western', zh:'中西區', type:'general',  lat:22.28489, lon:114.14442, addr:'西營盤社區綜合大樓（Sai Ying Pun Community Complex, 2 High Street）' },
@@ -221,12 +223,13 @@ const STATIONS = [
 ];
 
 /* ============================================================
-   區塊 3：變量定義與「簡單分級配色」
-   - steps  ：分級閾值（升序），配合 BAND_COLORS 形成 5 級配色
-   - labels ：各等級文字標籤
-   - source ：epd = 環保署實測發布；cams = Open-Meteo/CAMS 模擬值
-   閾值為教學用簡化分級（參考香港空氣質素指標 AQO 及 WHO 指引量級），
-   AQHI 分級則採用環保署官方定義（1-3 低 / 4-6 中 / 7 高 / 8-10 甚高 / 10+ 嚴重）
+   Section 3: variable definitions and the "simple graded colour scale"
+   - steps  : band thresholds (ascending); with BAND_COLORS these give the 5 bands
+   - labels : text label for each band
+   - source : epd = measured value published by EPD; cams = modelled value from Open-Meteo/CAMS
+   The pollutant thresholds are a deliberately simplified teaching scale, informed by the Hong
+   Kong air quality objectives and WHO guideline levels; the AQHI bands use EPD's official
+   definition (1-3 Low / 4-6 Moderate / 7 High / 8-10 Very High / 10+ Serious)
    ============================================================ */
 const BAND_COLORS = ['#2e7d32', '#f9a825', '#ef6c00', '#c62828', '#6a1b9a'];
 
@@ -244,14 +247,14 @@ const VARS = [
   { key:'pm10', label:'PM10',   fullName:'可吸入懸浮粒子 Respirable Suspended Particulates', unit:'μg/m³', source:'cams',
     steps:[50, 100, 150, 250],      labels:['良好 Good','一般 Fair','偏高 Elevated','高 High','嚴重 Severe'] },
 ];
-// 由 key 快速查找變量定義
+// Fast lookup of a variable definition by key
 const VAR_MAP = Object.fromEntries(VARS.map(v => [v.key, v]));
 
 /* ============================================================
-   區塊 4：全局運行狀態
-   - aqhiData / camsData：以站名為主鍵的實時數據字典（空間融合結果）
-   - markers：站名 → Leaflet 標記 對照表
-   - colorMetric：當前地圖著色指標（須始終屬於已勾選集合）
+   Section 4: global runtime state
+   - aqhiData / camsData: live data dictionaries keyed by station name (the spatial join result)
+   - markers: station name -> Leaflet marker lookup table
+   - colorMetric: the variable currently driving marker colours (must always be checked)
    ============================================================ */
 const state = {
   aqhiData: {},      // { 'Central/Western': {aqhi:2, risk:'Low', time:'2026-08-21T09:30:00'}, ... }
@@ -259,28 +262,33 @@ const state = {
   markers: {},
   colorMetric: 'aqhi',
 };
-let map = null;                 // Leaflet 地圖實例
-let countdownSec = POLL_INTERVAL_MS / 1000;  // 下次自動更新倒數（秒）
+let map = null;                 // Leaflet map instance
+let countdownSec = POLL_INTERVAL_MS / 1000;  // seconds until the next auto-refresh
 
 /* ============================================================
-   區塊 5：地圖初始化
-   - 底圖採用 Esri Canvas World Light Gray Base
-   - fitBounds 僅在初始化時調用一次以框住全部站点；
-     之後的輪詢刷新【絕不】重置地圖視角（保留用戶當前縮放/平移狀態）
+   Section 5: map initialisation
+   - the basemap is Esri Canvas World Light Gray Base
+   - fitBounds is called once, here, to frame all the stations; later polling
+     refreshes NEVER reset the map view, so the user's zoom/pan is preserved
    ============================================================ */
 function initMap() {
   map = L.map('map');
-  // 【為何不用 OpenStreetMap 官方瓦片】
-  // 本頁支援「雙擊檔案以 file:// 直接開啟」。OSM 官方瓦片伺服器要求每個請求
-  // 必須帶有 Referer 標頭（Referer requirement），但 file:// 頁面無法送出
-  // Referer，OSM 便會回傳 HTTP 200、卻以一張「Access blocked: App is not
-  // following the tile usage policy」的拒絕圖片（約 6,987 bytes）取代真正的
-  // 瓦片，令地圖在離線開啟時全變灰色格子。（<meta name="referrer"> 在 file://
-  // 下無效，CARTO 底圖現已需要 API key，均不能解決此問題。）
-  // 因此改用 Esri Canvas Light Gray 底圖：其瓦片不要求 Referer，file:// 與
-  // http(s) 兩種情況下均可正常顯示，且為淺色底圖，與彩色標記對比清晰。
-  // 注意兩個易錯點：① Esri 的路徑順序為 {z}/{y}/{x}（與 OSM 的 {z}/{x}/{y} 相反）；
-  //              ② maxZoom 只可為 16，因該底圖在 zoom 16 之後並無資料。
+  // [WHY NOT THE OFFICIAL OPENSTREETMAP TILES]
+  // This page has to work when the file is double-clicked and opened over file://.
+  // OSM's official tile server imposes a Referer requirement - every tile request
+  // must carry a Referer header - and a file:// page cannot send one. OSM then
+  // replies HTTP 200 but substitutes a constant ~6,987-byte "Access blocked: App
+  // is not following the tile usage policy" refusal image for every real tile, so
+  // the map fills with grey squares while the console stays clean and every
+  // request reports 200. (<meta name="referrer"> has no effect on a file://
+  // origin, and CARTO basemaps now require an API key, so neither fixes it.)
+  // Esri Canvas Light Gray is therefore used instead: its tiles impose no Referer
+  // requirement, so the same file works over both file:// and http(s) - and being
+  // a light basemap, it keeps the coloured markers the most salient thing on
+  // screen.
+  // Two easy-to-get-wrong details: (1) Esri's tile path order is {z}/{y}/{x}, the
+  // reverse of OSM's {z}/{x}/{y}; (2) maxZoom must be 16, because that basemap has
+  // no data beyond zoom 16.
   L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}', {
     attribution: 'Tiles &copy; <a href="https://www.esri.com/" target="_blank" rel="noopener">Esri</a> &mdash; Source: Esri, HERE, Garmin, &copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> contributors',
     maxZoom: 16
@@ -290,9 +298,9 @@ function initMap() {
 }
 
 /* ============================================================
-   區塊 6：為每個監測站創建 Marker（圓形標記）
-   - 初始灰色；取得數據後按著色指標數值動態變色
-   - 綁定 hover 提示（中英站名）與點擊彈窗
+   Section 6: create a marker (circle marker) for each monitoring station
+   - grey at first, then recoloured dynamically by the colour metric once data arrives
+   - binds a hover tooltip (station name in EN and ZH) and a click popup
    ============================================================ */
 function createMarkers() {
   STATIONS.forEach(st => {
@@ -307,8 +315,8 @@ function createMarkers() {
 }
 
 /* ============================================================
-   區塊 7：分級配色工具函數
-   getBandIndex(key, value) → 返回 0-4 的等級序號；無效值返回 null
+   Section 7: graded colour helper functions
+   getBandIndex(key, value) -> band index 0-4; null for an invalid value
    ============================================================ */
 function getBandIndex(key, value) {
   if (value === null || value === undefined || Number.isNaN(Number(value))) return null;
@@ -316,12 +324,12 @@ function getBandIndex(key, value) {
   for (let i = 0; i < VAR_MAP[key].steps.length; i++) {
     if (v <= VAR_MAP[key].steps[i]) return i;
   }
-  return VAR_MAP[key].steps.length; // 超過最高閾值 → 最高等級
+  return VAR_MAP[key].steps.length; // above the highest threshold -> top band
 }
 
 /* ============================================================
-   區塊 8：彈窗內容構建
-   只展示【當前已勾選】的變量；附帶數據更新時間與來源標註
+   Section 8: building the popup contents
+   shows ONLY the currently checked variables, with data timestamps and source labels
    ============================================================ */
 function buildPopup(st) {
   const aqhi = state.aqhiData[st.name];
@@ -336,7 +344,7 @@ function buildPopup(st) {
   checked.forEach(key => {
     const v = VAR_MAP[key];
     if (key === 'aqhi') {
-      // AQHI：環保署實測發布值
+      // AQHI: measured value published by EPD
       if (aqhi) {
         const band = getBandIndex('aqhi', aqhi.aqhi);
         html += `<b>AQHI：</b>` +
@@ -346,7 +354,7 @@ function buildPopup(st) {
         html += `<b>AQHI：</b><span class="na">No data 暫無數據</span><br>`;
       }
     } else {
-      // 污染物：Open-Meteo/CAMS 模擬濃度
+      // Pollutant: modelled concentration from Open-Meteo/CAMS
       if (cams && cams[key] !== null && cams[key] !== undefined) {
         const band = getBandIndex(key, cams[key]);
         html += `<b>${v.label}：</b>` +
@@ -363,13 +371,13 @@ function buildPopup(st) {
           `⚠️ Modelled values may differ from actual measurements 模擬值或與實際測量有偏差，僅供參考</small>`;
   return html;
 }
-// AQHI 健康風險等級中英文對照
+// AQHI health risk levels, EN/ZH
 const RISK_ZH = { 'Low':'低 Low', 'Moderate':'中 Moderate', 'High':'高 High', 'Very High':'甚高 Very High', 'Serious':'嚴重 Serious' };
 
 /* ============================================================
-   區塊 9：地圖標記重繪（每次數據刷新或著色指標切換後調用）
-   - setStyle 原地改色，不移動地圖視角
-   - 若某站彈窗正處於打開狀態，同步刷新其內容
+   Section 9: redrawing the map markers (after every refresh or colour metric change)
+   - setStyle recolours in place and never moves the map view
+   - if a station's popup is open, its contents are refreshed too
    ============================================================ */
 function renderMarkers() {
   STATIONS.forEach(st => {
@@ -388,12 +396,13 @@ function renderMarkers() {
 }
 
 /* ============================================================
-   區塊 10：圖例渲染（跟隨當前著色指標動態更新）
-   ⚠️ 區間文字必須與 getBandIndex() 的分級邏輯完全一致：
-        getBandIndex 用 `value <= steps[i]` 判定，即 steps[i] 本身屬於第 i 級。
-        故各級區間為「上一個閾值之後、至本個閾值為止」，下界須排除（用 > 而非 –），
-        否則相鄰兩級會共用同一個閾值數字，令圖例出現重疊區間。
-        例：AQHI steps=[3,6,7,10] → ≤3 / >3–6 / >6–7 / >7–10 / >10（= 1-3/4-6/7/8-10/>10）
+   Section 10: legend rendering (updates with the current colour metric)
+   WARNING: the range text must match getBandIndex()'s banding logic exactly:
+        getBandIndex tests `value <= steps[i]`, so steps[i] itself belongs to band i.
+        Each band therefore runs from just above the previous threshold up to this
+        one, and its lower bound must be exclusive (">" rather than "-"); otherwise
+        adjacent bands share a boundary value and the legend shows overlapping ranges.
+        e.g. AQHI steps=[3,6,7,10] -> ≤3 / >3–6 / >6–7 / >7–10 / >10 (= 1-3/4-6/7/8-10/>10)
    ============================================================ */
 function renderLegend() {
   const v = VAR_MAP[state.colorMetric];
@@ -411,8 +420,9 @@ function renderLegend() {
 }
 
 /* ============================================================
-   區塊 11：全站數據表格渲染
-   表頭隨勾選變量動態增減；單元格按各自變量的分級配色顯示色塊
+   Section 11: rendering the all-stations data table
+   header cells are added and removed with the checked variables; each cell is
+   shaded by the band of its own variable
    ============================================================ */
 function renderTable() {
   const checked = getCheckedKeys();
@@ -443,16 +453,17 @@ function renderTable() {
 }
 
 /* ============================================================
-   區塊 12：控件生成（著色指標單選組 + 顯示變量複選組）
-   - 複選框默認全部勾選
-   - 取消勾選時若恰好取消的是當前著色指標，自動回退到第一個仍勾選的變量
+   Section 12: building the controls (colour metric radios + variable checkboxes)
+   - all checkboxes start checked
+   - if the unticked variable is the current colour metric, fall back to the first
+     still-checked variable
    ============================================================ */
 function buildControls() {
   const radioBox = document.getElementById('metric-radios');
   const checkBox = document.getElementById('var-checkboxes');
 
   VARS.forEach(v => {
-    // 著色指標單選
+    // Colour metric radio button
     const rLabel = document.createElement('label');
     rLabel.innerHTML = `<input type="radio" name="color-metric" value="${v.key}" ${v.key === state.colorMetric ? 'checked' : ''}> ${v.label}`;
     rLabel.querySelector('input').addEventListener('change', () => {
@@ -462,24 +473,24 @@ function buildControls() {
     });
     radioBox.appendChild(rLabel);
 
-    // 顯示變量複選（默認全選）
+    // Variable checkbox (all checked by default)
     const cLabel = document.createElement('label');
     cLabel.innerHTML = `<input type="checkbox" value="${v.key}" checked> ${v.label}`;
     cLabel.querySelector('input').addEventListener('change', () => {
-      syncColorMetric();   // 維持「著色指標必須已勾選」的不變式
+      syncColorMetric();   // preserve the "colour metric must stay checked" invariant
       renderLegend();
-      renderMarkers();     // 彈窗、標記、表格三者同步更新
+      renderMarkers();     // popups, markers and table all update together
       renderTable();
     });
     checkBox.appendChild(cLabel);
   });
 }
 
-// 讀取當前勾選的變量 key 列表
+// Read the list of currently checked variable keys
 function getCheckedKeys() {
   return Array.from(document.querySelectorAll('#var-checkboxes input:checked')).map(i => i.value);
 }
-// 若當前著色指標被取消勾選，自動切換到第一個仍勾選的變量
+// If the current colour metric has been unchecked, switch to the first still-checked variable
 function syncColorMetric() {
   const checked = getCheckedKeys();
   if (!checked.includes(state.colorMetric) && checked.length > 0) {
@@ -490,10 +501,10 @@ function syncColorMetric() {
 }
 
 /* ============================================================
-   區塊 13：數據抓取（JSON 解析 + 錯誤捕獲）
+   Section 13: data fetching (JSON parsing + error capture)
    ------------------------------------------------------------
-   來源 A：環保署 AQHI 實時 JSON（18 站，含發布時間）
-   返回示例：[{station:"Central/Western", aqhi:2, health_risk:"Low",
+   Source A: EPD real-time AQHI JSON (18 stations, includes the publish time)
+   Response example: [{station:"Central/Western", aqhi:2, health_risk:"Low",
               publish_date:"2026-08-21T09:30:00"}, ...]
    ============================================================ */
 async function fetchAQHI() {
@@ -509,9 +520,10 @@ async function fetchAQHI() {
 }
 
 /* ------------------------------------------------------------
-   來源 B：Open-Meteo 空氣質素 API（CAMS 模擬濃度，免密鑰、CORS 開放）
-   技巧：把 18 個站點坐標以逗號串接，一次請求批量返回（順序與輸入一致）
-   這是「靜態地理元數據 × 實時觀測數據」空間融合的第二條數據通道
+   Source B: Open-Meteo air quality API (CAMS modelled concentrations, no key, CORS-open)
+   Technique: join the 18 coordinates with commas so ONE request returns them all
+   (response order matches input order). This is the second data channel of the
+   "static geographic metadata x live observations" spatial fusion.
    ============================================================ */
 async function fetchCAMS() {
   const lats = STATIONS.map(s => s.lat).join(',');
@@ -521,7 +533,7 @@ async function fetchCAMS() {
   const res = await fetch(url);
   if (!res.ok) throw new Error(`Open-Meteo HTTP ${res.status}`);
   let data = await res.json();
-  if (!Array.isArray(data)) data = [data]; // 單點時 API 返回對象而非數組
+  if (!Array.isArray(data)) data = [data]; // a single coordinate returns an object, not an array
   if (data.length !== STATIONS.length) throw new Error('Open-Meteo 返回站點數不符');
 
   const out = {};
@@ -540,10 +552,10 @@ async function fetchCAMS() {
 }
 
 /* ============================================================
-   區塊 14：統一刷新流程
-   - Promise.allSettled：任一來源失敗不影響另一來源正常展示
-   - 失敗時在頁面頂部橫幅提示，並保留最近一次成功數據
-   - 成功後重繪標記與表格（不改變勾選狀態、不重置地圖視角）
+   Section 14: the unified refresh flow
+   - Promise.allSettled: one source failing does not stop the other from displaying
+   - on failure a banner appears at the top of the page and the last good data is kept
+   - on success, markers and the table are redrawn (checkbox state and map view untouched)
    ============================================================ */
 async function refreshAll() {
   document.getElementById('status-text').textContent = 'Updating data 正在更新數據…';
@@ -567,12 +579,12 @@ async function refreshAll() {
     banner.hidden = true;
   }
 
-  countdownSec = POLL_INTERVAL_MS / 1000; // 重置自動更新倒數
+  countdownSec = POLL_INTERVAL_MS / 1000; // reset the auto-refresh countdown
   updateStatusText(new Date());
 }
 
 /* ============================================================
-   區塊 15：狀態欄與倒數計時
+   Section 15: the status bar and its countdown
    ============================================================ */
 function updateStatusText(now) {
   const t = now.toLocaleTimeString('zh-HK', { hour12: false });
@@ -585,28 +597,28 @@ setInterval(() => {
 }, 1000);
 
 /* ============================================================
-   區塊 16：手動刷新按鈕 + 自動輪詢定時器（300 秒）
-   注意：輪詢只替換數據並原地重繪，絕不重建地圖，
-        因此用戶的勾選狀態與地圖視角天然得以保留
+   Section 16: the manual refresh button + the 300-second polling timer
+   Note: polling only swaps the data and redraws in place - it never rebuilds the
+        map, so the user's checkbox state and map view are preserved automatically
    ============================================================ */
 document.getElementById('btn-refresh').addEventListener('click', refreshAll);
 
 /* ============================================================
-   區塊 17：應用入口
+   Section 17: application entry point
    ============================================================ */
 window.addEventListener('DOMContentLoaded', () => {
-  if (typeof L === 'undefined') { // Leaflet CDN 加載失敗的兜底提示
+  if (typeof L === 'undefined') { // fallback if the Leaflet CDN fails to load
     const banner = document.getElementById('error-banner');
     banner.textContent = '⚠️ Failed to load the Leaflet map library. Please check your network connection and reload the page. Leaflet 地圖庫加載失敗，請檢查網絡連接後重新載入頁面。';
     banner.hidden = false;
     return;
   }
-  initMap();          // 初始化地圖與底圖
-  createMarkers();    // 建立 18 個站點標記
-  buildControls();    // 生成單選/複選控件
-  renderLegend();     // 渲染初始圖例
-  refreshAll();       // 首次抓取並渲染
-  setInterval(refreshAll, POLL_INTERVAL_MS); // 啟動 300 秒自動輪詢
+  initMap();          // initialise the map and basemap
+  createMarkers();    // create the 18 station markers
+  buildControls();    // build the radio/checkbox controls
+  renderLegend();     // render the initial legend
+  refreshAll();       // first fetch and render
+  setInterval(refreshAll, POLL_INTERVAL_MS); // start the 300-second auto-poll
 });
 </script>
 </body>
