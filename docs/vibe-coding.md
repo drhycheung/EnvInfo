@@ -61,7 +61,7 @@ Gemini Canvas, ChatGPT, Claude or any other coding agent.
 3. **Geocoding the stations** — official coordinates for 16 stations were recovered from the City
    Dashboard's ArcGIS map feed; the two 2020 stations were located via the gov.hk press release and
    geocoded through Nominatim/Overpass (OpenStreetMap).
-4. **Code generation** — a single annotated HTML file (native ES6, Chinese comments per block).
+4. **Code generation** — a single annotated HTML file (native ES6, English comments per block).
 5. **Browser testing** — OpenCode drove the page with Playwright: checked console errors, confirmed
    18 table rows × 6 variables rendered, opened a popup, toggled checkboxes (table columns and
    popup content updated), switched the colour metric (markers recoloured, legend updated).
@@ -175,7 +175,7 @@ REQUIREMENTS:
   Open-Meteo.com under CC BY 4.0 (underlying data Copernicus CAMS/ECMWF);
   Esri (Canvas World Light Gray Base, source Esri/HERE/Garmin) and © OpenStreetMap contributors;
   Leaflet.
-- Add generous Chinese comments explaining each functional block (teaching use), including the
+- Add generous English comments explaining each functional block (teaching use), including the
   Referer explanation and the {z}/{y}/{x} + maxZoom notes beside the tileLayer call, so students
   reading the code see WHY the basemap is not OpenStreetMap.
 
