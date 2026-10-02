@@ -13,7 +13,39 @@ browser and it works; drop it into a GitHub Pages repository and it is deployed.
 
 ---
 
-## 1. What the dashboard does
+## 1. Where this project fits: Monitor, Analyse, Control
+
+Environmental informatics is usually taught as three activities: **monitor**, **analyse** and
+**control**.
+
+| Stage | What it means | Which project |
+|---|---|---|
+| **Monitor** | Collect and display data so that the current situation is visible | **This project** — a live dashboard of Hong Kong air quality |
+| **Analyse** | Examine the data in order to explain patterns and relationships | [EnvML](https://github.com/drhycheung/EnvML) — a model relating weather to PM2.5 |
+| **Control** | Act on the analysis, by deciding what to do next | [EnvML](https://github.com/drhycheung/EnvML) — the prediction, and the thresholds that trigger an action |
+
+**This project is the monitor stage.** It answers the question *"what is the air quality like
+right now, and where?"* It covers all 18 Environmental Protection Department stations and
+refreshes automatically, so that the current situation is visible without any manual effort.
+
+**Monitoring is necessary but not sufficient.** A dashboard displays what has already
+happened. It cannot answer *"will tomorrow evening exceed 150 µg/m³?"*, and it therefore
+cannot support a decision about tomorrow. Data that cannot be used for a decision has limited
+value, however well it is displayed.
+
+The **analyse** and **control** stages are covered by a separate project,
+[EnvML](https://github.com/drhycheung/EnvML), which takes a data stream that could only be
+watched and turns it into an estimate for an hour that has not yet occurred. The two projects
+are designed to be used together: this project supplies the monitor stage, and EnvML supplies
+the analyse and control stages.
+
+Because this project deals only with observation and display, it deliberately makes no
+prediction. Adding a forecast to a monitoring dashboard would change what the dashboard is,
+and would require the analysis and accuracy reporting described in the EnvML README.
+
+---
+
+## 2. What the dashboard does
 
 | Feature | Implementation |
 |---|---|
@@ -21,16 +53,16 @@ browser and it works; drop it into a GitHub Pages repository and it is deployed.
 | Markers coloured by pollutant level | Simple 5-band graded colour scale, switchable per variable |
 | Click popups | Station name (EN/中文), type, address, selected readings with units/bands, data timestamps |
 | Variable selection | Checkboxes for AQHI, NO₂, O₃, SO₂, PM2.5, PM10 — map popups, markers and the data table update in sync |
-| Colour metric | Radio buttons choose which variable drives marker colours |
+| Colour metric | Radio buttons select which variable determines the marker colours |
 | Data table | All 18 stations × selected variables, colour-coded cells |
 | Bilingual interface | Every piece of on-screen text is presented in both Traditional Chinese and English |
-| Auto-refresh | Polls every **300 seconds**; preserves checkbox state and never resets the map view |
-| Error handling | On-page banner if either data source fails; last successful data is retained |
+| Automatic refresh | Requests data every **300 seconds**; retains the checkbox settings and does not reset the map view |
+| Error handling | Displays a message on the page if either data source fails, and retains the most recent successful data |
 | Attribution | EPD/data.gov.hk source statement, Open-Meteo CC BY 4.0 credit, CAMS acknowledgement, Esri + OSM/Leaflet credits |
 
-## 2. Data sources (and why two of them)
+## 3. Data sources (and why two of them)
 
-A key lesson of this project is that **the "obvious" official API cannot be used from a browser**:
+An important lesson of this project is that **the official API that appears to be the obvious choice cannot be used from a browser**:
 
 | Source | Data provided | CORS policy | Browser? |
 |---|---|---|---|
@@ -48,7 +80,7 @@ Full endpoint URLs:
 ❌ https://dashboard.data.gov.hk/dashboard/smart_environment/data/map   (POST only)
 ```
 
-So the dashboard fuses:
+The dashboard therefore combines three sources:
 
 1. **EPD AQHI JSON** → official AQHI + health risk per station (join key: exact English station name).
 2. **Open-Meteo air-quality API** → modelled pollutant concentrations at each station's hardcoded
@@ -59,48 +91,50 @@ So the dashboard fuses:
    published station addresses and the July 2020 government press release for the two newest
    stations (Southern = Aberdeen Tennis & Squash Centre; North = Po Wing Road Sports Centre).
 
-> Teaching point: this is real-world spatial data fusion — real-time observations joined to static
-> geometry metadata by name as primary key — plus an honest discussion of measurement vs model data.
+> Teaching point: this is spatial data fusion as it is performed in practice — real-time
+> observations joined to static location data, using the station name as the join key — together
+> with a clear account of the difference between measured and modelled data.
 
-## 3. How to run
+## 4. How to run
 
-- **Locally**: double-click `index.html` (any modern browser), or serve it:
-  `python3 -m http.server 8000` then visit `http://localhost:8000/index.html`.
-  Both routes work identically, including the map — which is why the basemap is Esri rather than
-  OpenStreetMap (see the [basemap notes](docs/basemap.md)). The two APIs are `CORS *` and keyless, so
-  nothing needs a local server; the only `file://` casualty is the OSM tile `Referer` requirement.
+- **Locally**: double-click `index.html` in any modern browser, or serve the directory with
+  `python3 -m http.server 8000` and open `http://localhost:8000/index.html`. Both methods work
+  identically, including the map, which is why the basemap is Esri rather than OpenStreetMap
+  (see the [basemap notes](docs/basemap.md)). Both APIs return `CORS *` and require no key, so
+  no local server is needed; the only element that does not work from `file://` is the OSM
+  tile `Referer` requirement.
 - **GitHub Pages (your own deployment)**: push `index.html` to *your* GitHub repository, then enable
   Pages via **Settings → Pages → Deploy from a branch** (select the branch and `/ (root)`). Your
   dashboard will go live at `https://<your-username>.github.io/<repo-name>/` — replace the
   placeholders with your own GitHub username and repository name.
   (The live-demo link at the top of this README is the author's own deployment.)
 
-Desktop browsers assumed (no mobile optimisation, by design).
+Desktop browsers are assumed. Mobile screens are not supported, by design.
 
-## 4. Known limitations
+## 5. Known limitations
 
-Worth stating plainly, because several of these are consequences of the constraints in §2 rather than
-oversights:
+These are stated explicitly because several of them follow from the constraints described in
+section 3, and are not oversights:
 
 | Limitation | Consequence |
 |---|---|
-| Pollutant values are **modelled** (CAMS via Open-Meteo), not measured | The dashboard is a visualisation aid, not an authority. [EPD's own site](https://www.aqhi.gov.hk) publishes the official analyser readings |
-| The station join key is the **exact English station name** | If EPD renames a station, that station silently disappears from the map and table rather than raising an error |
+| Pollutant values are **modelled** (CAMS via Open-Meteo), not measured | The dashboard is an aid to visualisation and is not an authoritative source. [EPD's own website](https://www.aqhi.gov.hk) publishes the official analyser readings |
+| The station join key is the **exact English station name** | If EPD renames a station, that station disappears from both the map and the table without any error message |
 | Coordinates are **hardcoded**, not fetched | New or relocated stations will not appear until the `STATIONS` array is updated by hand |
-| Refresh interval is 300 s, but EPD publishes AQHI **hourly** | The map can lag the official figure by up to one publish cycle; the publish time is shown in each popup so the lag is visible |
+| The refresh interval is 300 s, but EPD publishes AQHI **hourly** | The map may lag the official figure by up to one publishing cycle; the publication time is shown in each popup so that the delay is visible |
 | Basemap stops at **zoom 16** | `Canvas/World_Light_Gray_Base` has no data beyond it; street-level zoom on Esri's other services would be needed |
 | Desktop only | No mobile or tablet layout; the sidebar is a fixed-width scrolling column |
-| Four external dependencies | Leaflet (unpkg CDN), two live APIs and the Esri tile service must all be reachable; offline use shows tiles and data failing together |
-| Esri attribution must stay visible | Removing or shortening the credit breaches Esri's terms — see the [basemap notes](docs/basemap.md) |
+| Four external dependencies | Leaflet (unpkg CDN), two live APIs and the Esri tile service must all be reachable; when offline, the tiles and the data fail together |
+| The Esri attribution must remain visible | Removing or shortening the credit breaches Esri's terms of use — see the [basemap notes](docs/basemap.md) |
 
-## 5. Documentation
+## 6. Documentation
 
 | Document | What it covers |
 |---|---|
-| **[Basemap notes](docs/basemap.md)** | Why the basemap is Esri rather than OpenStreetMap — the `file://` `Referer` trap that silently returns `HTTP 200` with a refusal image, the three fixes that do *not* work, the `{z}/{y}/{x}` and `maxZoom: 16` traps, and how to verify a tile layer by byte size instead of by eye |
-| **[Vibe-coding guide](docs/vibe-coding.md)** | The design-thinking rationale behind the dashboard, how it was actually built with an AI coding tool, and the complete copy-paste prompt to reproduce it |
+| **[Basemap notes](docs/basemap.md)** | Why the basemap is Esri rather than OpenStreetMap; the `file://` `Referer` problem that returns `HTTP 200` with an image stating that access is refused; the three remedies that do *not* work; the `{z}/{y}/{x}` and `maxZoom: 16` problems; and how to verify a tile layer by file size rather than by visual inspection |
+| **[Vibe-coding guide](docs/vibe-coding.md)** | The design-thinking rationale behind the dashboard, how it was built with an AI coding tool, and the complete prompt needed to reproduce it |
 
-## 6. Licences & attribution
+## 7. Licences and attribution
 
 - AQHI data: Environmental Protection Department, HKSAR Government, via [DATA.GOV.HK](https://data.gov.hk).
 - Pollutant concentration layer: [Air quality data by Open-Meteo.com](https://open-meteo.com/),

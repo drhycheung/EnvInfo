@@ -1,35 +1,52 @@
 # Reproducing the dashboard with vibe coding
 
-Companion guide to the [main README](../README.md). This is the teaching pack for the lesson: why the
-dashboard is designed the way it is, how it was actually built with an AI coding tool, and the
-complete prompt to hand to one.
+Companion guide to the [main README](../README.md). This is the teaching resource for the
+lesson: the reasons for the design of the dashboard, how it was built with an AI coding tool,
+and the complete prompt required to reproduce it.
 
-**Last verified: 30 September 2026** against Gemini Canvas, OpenCode, and the deployed page at
-<https://drhycheung.github.io/EnvInfo/>.
+**Last verified: 30 September 2026** using Gemini Canvas and OpenCode, and against the deployed
+page at <https://drhycheung.github.io/EnvInfo/>.
 
 ## Contents
 
 1. [Design thinking: from raw data to an intuitive dashboard](#1-design-thinking-from-raw-data-to-an-intuitive-dashboard)
-2. [How the dashboard was actually built](#2-how-the-dashboard-was-actually-built)
+2. [How the dashboard was built](#2-how-the-dashboard-was-built)
 3. [The reproduction prompt](#3-the-reproduction-prompt) ← jump here if you just want to build it
 
 ---
 
 ## 1. Design thinking: from raw data to an intuitive dashboard
 
-The dashboard is the output of one design-thinking loop applied to a real usability problem:
-Hong Kong's air quality data exist, but they are not intuitive.
+The dashboard is the result of one design-thinking cycle applied to a practical usability
+problem: air quality data for Hong Kong are published, but they are not presented in a form
+that is easy to use.
 
 | Stage | This project's arc |
 |---|---|
-| **1. Empathise 同理心** | The user pain: pollutant tables buried on official sites, technical units (μg/m³), AQHI split from pollutant detail, sources scattered across pages, little geographic context. Non-experts cannot quickly answer "is the air bad near me right now?" |
-| **2. Define 定義** | Problem statement: *air quality information is available but not intuitive — residents need a single view that makes monitoring effortless and comparison instant.* Design goal: one screen, minimal jargon, at-a-glance status |
-| **3. Ideate 構思** | Options to make data intuitive: colour-coded map markers (read status without reading numbers), graded legends instead of raw thresholds, health-risk wording alongside indices, click-for-detail popups, a full-data table, bilingual labels. Converged design: interactive Leaflet map + control panel + summary table |
-| **4. Prototype 原型** | The single-file dashboard itself: every ideation choice materialised — green-to-purple marker colours, popups on demand, checkboxes to reduce clutter, 300-second auto-refresh so the page "monitors" without user effort |
-| **5. Test 測試** | Browser-automated checks plus real-user feedback; each fine-tuning round improved intuitiveness — wider panel, fully bilingual text, clearer table spacing, an explicit modelled-vs-measured disclaimer |
+| **1. Empathise 同理心** | The difficulty faced by users: pollutant tables are placed within official websites, technical units (μg/m³) are used throughout, the AQHI is presented separately from the pollutant measurements, information is distributed across several pages, and there is little geographic context. A reader who is not a specialist cannot quickly answer the question "is the air quality poor near me at present?" |
+| **2. Define 定義** | Problem statement: *air quality information is published but is not presented in an accessible form; residents require a single view in which monitoring requires no effort and comparison is immediate.* Design objective: a single screen, minimal technical vocabulary, and a status that can be read at a glance |
+| **3. Ideate 構思** | Options considered for improving accessibility: colour-coded map markers, so that status can be read without reading numbers; graded colour scales instead of raw threshold values; health-risk wording alongside the numerical indices; popups that display detail on request; a complete data table; and bilingual labels. The design adopted: an interactive Leaflet map, a control panel, and a summary table |
+| **4. Prototype 原型** | The single-file dashboard: each option was implemented, with markers coloured from green to purple, popups displayed on request, checkboxes that reduce visual clutter, and automatic refresh every 300 seconds so that the page monitors conditions without user effort |
+| **5. Test 測試** | Automated browser checks and feedback from real users; each round of adjustment improved accessibility, through a wider panel, fully bilingual text, clearer spacing in the table, and an explicit statement distinguishing modelled from measured data |
 
-Intuition was treated as the measurable outcome: every design decision traces back to reducing
-the time from "open page" to "understood the air".
+Accessibility was treated as the measurable outcome: each design decision reduces the time
+between opening the page and understanding the current air quality.
+
+### Context: Monitor, Analyse, Control
+
+This project is the **monitor** stage of environmental informatics: it collects and displays
+data so that the present situation is visible. It does not include analysis or control, and it
+makes no prediction.
+
+The reason is worth stating, because it defines the boundary of the project. A monitoring
+dashboard can report only what has already been measured. It can answer "what is the air
+quality like right now?" but it cannot answer "will tomorrow evening exceed 150 µg/m³?", and it
+therefore cannot support a decision about tomorrow. Those two stages are covered by a separate
+project, [EnvML](https://github.com/drhycheung/EnvML), which predicts the concentration for an
+hour that has not yet occurred.
+
+The two projects are intended to be used together, and the boundary between them is the
+teaching point: monitoring without prediction produces description but no action.
 
 **Benchmark against the official service**: EPD operates its own air quality website at
 [www.aqhi.gov.hk](https://www.aqhi.gov.hk). Its pollutant figures are **more accurate** —
@@ -47,7 +64,7 @@ back to EPD for authoritative readings.
 
 ---
 
-## 2. How the dashboard was actually built
+## 2. How the dashboard was built
 
 The dashboard was produced in one session using an agentic verify-first workflow. The tool used was
 OpenCode driven through Playwright; the same prompt in [Part 3](#3-the-reproduction-prompt) works in
@@ -85,7 +102,7 @@ why those findings are baked into the prompt below.
 > [!IMPORTANT]
 > These two bugs are the pedagogical heart of the lesson. Neither produced an error message; both
 > produced a page that looked finished. The only reason they were caught is that someone measured
-> the output instead of trusting it. An AI coding tool will happily hand you a page with either bug
+> the output instead of trusting it. An AI coding tool will readily produce a page containing either fault
 > and describe it as working.
 
 ---
@@ -126,7 +143,7 @@ BASEMAP — use this tile layer verbatim, do NOT substitute OpenStreetMap or CAR
     attribution: 'Tiles &copy; <a href="https://www.esri.com/">Esri</a> &mdash; Source: Esri, HERE, Garmin, &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
     maxZoom: 16
   }).addTo(map);
-  WHY, and why the obvious alternatives fail — the page must work when a student
+  WHY, and why the more apparent alternatives do not work — the page must function when a student
   double-clicks the HTML file (file:// protocol), not just when it is served over HTTP:
   - OSM's official tiles (tile.openstreetmap.org) impose a Referer requirement: every tile
     request must carry a Referer header. A file:// page cannot send one, so OSM returns
@@ -145,7 +162,7 @@ BASEMAP — use this tile layer verbatim, do NOT substitute OpenStreetMap or CAR
      yields a blank map that looks identical to the original bug.
   2. maxZoom MUST be 16 (not 18 or 19). Canvas/World_Light_Gray_Base has no data past zoom
      16 — a zoom-17 tile returns a constant ~2,521-byte blank image — so a map that looks fine
-     at city scale silently goes blank when a user zooms in one more level.
+     at city scale becomes blank without any error when a user zooms in one more level.
   3. Keep the full attribution string (Esri, HERE, Garmin, OpenStreetMap contributors) in the
      tile layer's attribution option AND in the page footer; Esri requires visible credit.
   Use the LIGHT basemap as specified so the green-to-purple marker colours stay the most

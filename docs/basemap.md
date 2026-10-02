@@ -1,7 +1,8 @@
 # Basemap notes: why Esri, and how to verify a tile layer
 
 Companion note to the [main README](../README.md). Everything here concerns one line of code in
-`index.html` — the `L.tileLayer(...)` call in `initMap()` — and the two ways it can fail silently.
+`index.html` — the `L.tileLayer(...)` call in `initMap()` — and the two ways in which it can
+fail without producing an error message.
 
 **Last verified: 30 September 2026**, against the live Esri tile service, a local `file://` load, and
 the deployed page at <https://drhycheung.github.io/EnvInfo/>. External tile services change their
@@ -17,7 +18,7 @@ see the CARTO note below for a live example of that happening.
 
 ## 1. Why the basemap is Esri, not OpenStreetMap
 
-This is the single most important gotcha in the whole project, and it is worth a full section
+This is the most significant problem in the project, and it is given a section of its own
 because it is invisible until you double-click the file.
 
 **The symptom.** The dashboard works perfectly when served over HTTP. Double-click `index.html`
@@ -39,8 +40,8 @@ tile. The status code is what makes this so confusing: the browser considers the
 | Changing the `{s}` subdomain (`a`/`b`/`c`) | Subdomains are not the problem — the policy check is server-side on every request |
 
 The CARTO entry is worth dwelling on for students: CARTO basemaps were a genuine, widely recommended
-`file://` workaround and keyless use worked for years. It stopped working quietly, with no deprecation
-notice — the map simply turned blank. This is the general lesson: **a tile layer that renders today
+`file://` workaround and keyless use worked for years. It then stopped working without any
+deprecation notice, and the map area became blank. The general lesson is: **a tile layer that renders today
 may not render next year**, and the failure will not announce itself.
 
 **The fix used.** Esri's ArcGIS Online basemaps, which do not require a `Referer` and need no API key:
@@ -59,7 +60,7 @@ Three details that are easy to get wrong:
    original bug, so it is easy to misdiagnose.
 2. **`maxZoom` must be `16`, not `18` or `19`.** `Canvas/World_Light_Gray_Base` has no data beyond
    zoom 16. Verified: a zoom-17 tile returns a constant **2,521-byte** blank image. Leaving
-   `maxZoom: 19` gives a map that works perfectly at city scale and then silently turns to blank
+   `maxZoom: 19` gives a map that works correctly at city scale and then becomes blank without any error
    tiles the moment a user zooms in one more level.
 3. **Attribution is mandatory** — Esri, HERE, Garmin and OpenStreetMap contributors. Keep the string
    intact (rendered via Leaflet's `attribution` option and repeated in the page footer).
