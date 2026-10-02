@@ -22,15 +22,16 @@ often combine elements of more than one.
 Both projects demonstrate different ways in which these three processes can be applied to
 different types of environmental data:
 
-| Stage | What it means | How these projects apply it |
-|---|---|---|
-| **Monitor** | Collect data about conditions so that the current situation is visible | **EnvInfo** collects and displays air-quality data from EPD stations. **EnvML** uses historical weather and PM2.5 measurements that were collected over time as the basis for analysis. |
-| **Analyse** | Examine data to identify patterns, relationships or meaning | **EnvInfo** performs analysis through visualisation — it presents spatial patterns on a map, allows comparison between stations, and summarises values so that patterns become clear. **EnvML** performs analysis through statistical modelling to find relationships between weather variables and PM2.5. |
-| **Control** | Use insights from monitoring and analysis to support action or decision-making | **EnvInfo** makes current conditions visible so that people can decide what action to take now (for example, adjusting plans based on local air quality). **EnvML** produces predictions that can inform decisions about future conditions (for example, whether PM2.5 is likely to reach a threshold). |
+This project is one of two teaching examples. The companion project,
+[EnvML](https://github.com/drhycheung/EnvML) is a single-file PM2.5 prediction demo that uses
+historical weather and PM2.5 measurements to train a gradient-boosted model and predict
+future concentrations against policy thresholds. EnvInfo focuses on live monitoring and
+spatial visualisation of Hong Kong air quality; it combines monitoring (collecting current
+readings), analysis (making patterns visible through a map and table) and control (helping
+users decide what to do now based on current conditions), all applied to live EPD data.
 
-**EnvInfo and EnvML are two different examples**, working with different datasets for different
-purposes. They are not designed as a pipeline and do not depend on each other. Each combines
-monitoring, analysis and control in its own way to suit its aims.
+Both examples apply the same three ideas in different ways to different datasets. They are
+independent and not designed to work together as a pipeline.
 
 ---
 

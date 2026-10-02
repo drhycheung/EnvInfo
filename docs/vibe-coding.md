@@ -34,17 +34,16 @@ between opening the page and understanding the current air quality.
 
 ### Context: Monitor, Analyse, Control
 
-The concepts of **monitor**, **analyse** and **control** are useful for describing how
-data-informed work operates. In practice, a single project can combine elements of all three.
-**EnvInfo** collects current air-quality data (monitor), presents it visually to reveal spatial
-patterns and comparisons (analyse), and makes those conditions visible to support timely
-decisions (control). **EnvML** works with a different dataset: it draws on historical weather
-and PM2.5 measurements (monitoring through data collection), builds a statistical model to
-identify relationships between weather and PM2.5 (analyse), and uses that model to predict
-future concentrations that can inform planning decisions (control).
+This project is one of two teaching examples. The companion project,
+[EnvML](https://github.com/drhycheung/EnvML) is a single-file PM2.5 prediction demo that uses
+historical weather and PM2.5 measurements to train a gradient-boosted model and predict
+future concentrations against policy thresholds (monitor + analyse + control for future
+conditions). EnvInfo collects current air-quality readings from EPD stations (monitor),
+presents them visually on a map and table to reveal spatial patterns (analyse), and makes
+those conditions clear to help users decide what action to take now (control).
 
-These are two different examples that apply the same ideas to different types of data. They are
-not a pipeline and do not depend on each other.
+These are two different examples using different datasets; they are independent and not
+designed to work together as a pipeline.
 
 **Benchmark against the official service**: EPD operates its own air quality website at
 [www.aqhi.gov.hk](https://www.aqhi.gov.hk). Its pollutant figures are **more accurate** —
