@@ -34,15 +34,11 @@ between opening the page and understanding the current air quality.
 
 ### Context: Monitor, Analyse, Control
 
-This project is one of two teaching examples. The companion project,
-[EnvML](https://github.com/drhycheung/EnvML) is a single-file PM2.5 prediction demo that uses
-historical weather and PM2.5 measurements to train a gradient-boosted model and predict
-future concentrations against policy thresholds (monitor + analyse + control for future
-conditions). EnvInfo collects current air-quality readings from EPD stations (monitor),
+This project is one of two teaching examples. EnvInfo collects current air-quality readings from EPD stations (monitor),
 presents them visually on a map and table to reveal spatial patterns (analyse), and makes
 those conditions clear to help users decide what action to take now (control).
 
-These are two different examples using different datasets.
+
 
 **Benchmark against the official service**: EPD operates its own air quality website at
 [www.aqhi.gov.hk](https://www.aqhi.gov.hk). Its pollutant figures are **more accurate** —
