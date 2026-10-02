@@ -16,22 +16,17 @@ browser and it works; drop it into a GitHub Pages repository and it is deployed.
 ## 1. Where this project fits: Monitor, Analyse, Control
 
 Environmental informatics can be understood through three activities: **monitor**, **analyse**
-and **control**. Most data-driven projects do not fit neatly into just one stage; instead, they
-often combine elements of more than one.
-
-Both projects demonstrate different ways in which these three processes can be applied to
-different types of environmental data:
+and **control**. Most data-driven projects combine elements of more than one.
 
 This project is one of two teaching examples. The companion project,
 [EnvML](https://github.com/drhycheung/EnvML) is a single-file PM2.5 prediction demo that uses
 historical weather and PM2.5 measurements to train a gradient-boosted model and predict
 future concentrations against policy thresholds. EnvInfo focuses on live monitoring and
-spatial visualisation of Hong Kong air quality; it combines monitoring (collecting current
-readings), analysis (making patterns visible through a map and table) and control (helping
-users decide what to do now based on current conditions), all applied to live EPD data.
+spatial visualisation of Hong Kong air quality: it collects current readings (monitor),
+makes spatial patterns and comparisons visible on a map and table (analyse), and helps users
+decide what action to take now based on current conditions (control).
 
-Both examples apply the same three ideas in different ways to different datasets. They are
-independent and not designed to work together as a pipeline.
+Both examples apply the same three ideas in different ways to different datasets.
 
 ---
 

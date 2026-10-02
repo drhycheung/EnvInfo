@@ -42,8 +42,7 @@ conditions). EnvInfo collects current air-quality readings from EPD stations (mo
 presents them visually on a map and table to reveal spatial patterns (analyse), and makes
 those conditions clear to help users decide what action to take now (control).
 
-These are two different examples using different datasets; they are independent and not
-designed to work together as a pipeline.
+These are two different examples using different datasets.
 
 **Benchmark against the official service**: EPD operates its own air quality website at
 [www.aqhi.gov.hk](https://www.aqhi.gov.hk). Its pollutant figures are **more accurate** —
