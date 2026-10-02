@@ -15,35 +15,26 @@ browser and it works; drop it into a GitHub Pages repository and it is deployed.
 
 ## 1. Where this project fits: Monitor, Analyse, Control
 
-Environmental informatics is usually taught as three activities: **monitor**, **analyse** and
-**control**.
+Environmental informatics can be understood through three activities: **monitor**, **analyse**
+and **control**. Most data-driven projects do not fit neatly into just one stage; instead, they
+often combine elements of more than one.
 
-| Stage | What it means | Which project |
+Both projects demonstrate different ways in which these three processes can be applied to
+different types of environmental data:
+
+| Stage | What it means | How these projects apply it |
 |---|---|---|
-| **Monitor** | Collect and display data so that the current situation is visible | **This project** — a live dashboard of Hong Kong air quality |
-| **Analyse** | Examine the data in order to explain patterns and relationships | [EnvML](https://github.com/drhycheung/EnvML) — a model relating weather to PM2.5 |
-| **Control** | Act on the analysis, by deciding what to do next | [EnvML](https://github.com/drhycheung/EnvML) — the prediction, and the thresholds that trigger an action |
+| **Monitor** | Collect data about conditions so that the current situation is visible | **EnvInfo** collects and displays air-quality data from EPD stations. **EnvML** uses historical weather and PM2.5 measurements that were collected over time as the basis for analysis. |
+| **Analyse** | Examine data to identify patterns, relationships or meaning | **EnvInfo** performs analysis through visualisation — it presents spatial patterns on a map, allows comparison between stations, and summarises values so that patterns become clear. **EnvML** performs analysis through statistical modelling to find relationships between weather variables and PM2.5. |
+| **Control** | Use insights from monitoring and analysis to support action or decision-making | **EnvInfo** makes current conditions visible so that people can decide what action to take now (for example, adjusting plans based on local air quality). **EnvML** produces predictions that can inform decisions about future conditions (for example, whether PM2.5 is likely to reach a threshold). |
 
-**This project is the monitor stage.** It answers the question *"what is the air quality like
-right now, and where?"* It covers all 18 Environmental Protection Department stations and
-refreshes automatically, so that the current situation is visible without any manual effort.
-
-**Monitoring is necessary but not sufficient.** A dashboard displays what has already
-happened. It cannot answer *"will tomorrow evening exceed 150 µg/m³?"*, and it therefore
-cannot support a decision about tomorrow. Data that cannot be used for a decision has limited
-value, however well it is displayed.
-
-The **analyse** and **control** stages are covered by a separate project,
-[EnvML](https://github.com/drhycheung/EnvML), which takes a data stream that could only be
-watched and turns it into an estimate for an hour that has not yet occurred. The two projects
-are designed to be used together: this project supplies the monitor stage, and EnvML supplies
-the analyse and control stages.
-
-Because this project deals only with observation and display, it deliberately makes no
-prediction. Adding a forecast to a monitoring dashboard would change what the dashboard is,
-and would require the analysis and accuracy reporting described in the EnvML README.
+**EnvInfo and EnvML are two different examples**, working with different datasets for different
+purposes. They are not designed as a pipeline and do not depend on each other. Each combines
+monitoring, analysis and control in its own way to suit its aims.
 
 ---
+
+
 
 ## 2. What the dashboard does
 

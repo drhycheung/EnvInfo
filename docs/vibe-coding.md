@@ -34,19 +34,17 @@ between opening the page and understanding the current air quality.
 
 ### Context: Monitor, Analyse, Control
 
-This project is the **monitor** stage of environmental informatics: it collects and displays
-data so that the present situation is visible. It does not include analysis or control, and it
-makes no prediction.
+The concepts of **monitor**, **analyse** and **control** are useful for describing how
+data-informed work operates. In practice, a single project can combine elements of all three.
+**EnvInfo** collects current air-quality data (monitor), presents it visually to reveal spatial
+patterns and comparisons (analyse), and makes those conditions visible to support timely
+decisions (control). **EnvML** works with a different dataset: it draws on historical weather
+and PM2.5 measurements (monitoring through data collection), builds a statistical model to
+identify relationships between weather and PM2.5 (analyse), and uses that model to predict
+future concentrations that can inform planning decisions (control).
 
-The reason is worth stating, because it defines the boundary of the project. A monitoring
-dashboard can report only what has already been measured. It can answer "what is the air
-quality like right now?" but it cannot answer "will tomorrow evening exceed 150 µg/m³?", and it
-therefore cannot support a decision about tomorrow. Those two stages are covered by a separate
-project, [EnvML](https://github.com/drhycheung/EnvML), which predicts the concentration for an
-hour that has not yet occurred.
-
-The two projects are intended to be used together, and the boundary between them is the
-teaching point: monitoring without prediction produces description but no action.
+These are two different examples that apply the same ideas to different types of data. They are
+not a pipeline and do not depend on each other.
 
 **Benchmark against the official service**: EPD operates its own air quality website at
 [www.aqhi.gov.hk](https://www.aqhi.gov.hk). Its pollutant figures are **more accurate** —
