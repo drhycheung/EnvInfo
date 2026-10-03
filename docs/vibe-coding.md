@@ -11,7 +11,8 @@ page at <https://drhycheung.github.io/EnvInfo/>.
 
 1. [Design thinking: from raw data to an intuitive dashboard](#1-design-thinking-from-raw-data-to-an-intuitive-dashboard)
 2. [How the dashboard was built](#2-how-the-dashboard-was-built)
-3. [The reproduction prompt](#3-the-reproduction-prompt) ← jump here if you just want to build it
+3. [Further work for students](#3-further-work-for-students)
+4. [The reproduction prompt](#4-the-reproduction-prompt) ← jump here if you just want to build it
 
 ---
 
@@ -75,8 +76,10 @@ Gemini Canvas, ChatGPT, Claude or any other coding agent.
    18 table rows × 6 variables rendered, opened a popup, toggled checkboxes (table columns and
    popup content updated), switched the colour metric (markers recoloured, legend updated).
 
+### Bugs that measurement caught and looking did not
+
 Two bugs were caught by measurement rather than by looking at the screen, and both are now encoded
-into the prompt in [Part 3](#3-the-reproduction-prompt):
+into the prompt in [Part 4](#4-the-reproduction-prompt):
 
 - **A `file://`-only broken basemap.** The map was fine over HTTP and full of grey squares when the
   file was double-clicked — with zero console errors and `HTTP 200` on every tile. The giveaway was
@@ -99,7 +102,22 @@ why those findings are baked into the prompt below.
 
 ---
 
-## 3. The reproduction prompt
+## 3. Further work for students
+
+This project is deliberately **not** a research contribution. Official and third-party air-quality
+dashboards already exist, and EPD's own site remains the authoritative source. That is by design:
+this is a teaching baseline, not a novel product.
+
+Students are encouraged to extend it, or to build something adjacent — a new data layer, a different
+analysis, audience or service — so that what they build brings genuinely unique value to
+environmental management. The limitations in the
+[main README](../README.md#5-known-limitations) suggest several directions; the most direct are to
+replace the modelled pollutant layer with measured station readings, to add a historical view or
+trend, to add health-advice logic keyed to the AQHI bands, and to add a mobile layout.
+
+---
+
+## 4. The reproduction prompt
 
 Give the prompt below to Gemini, OpenCode, Claude, ChatGPT or any coding agent. It encodes every
 pitfall discovered above, so a working dashboard should come out first-pass.

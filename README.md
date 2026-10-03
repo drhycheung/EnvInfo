@@ -24,7 +24,6 @@ conditions clear to help users decide what action to take now (control).
 
 ---
 
-
 ## 2. What the dashboard does
 
 | Feature | Implementation |
@@ -39,6 +38,8 @@ conditions clear to help users decide what action to take now (control).
 | Automatic refresh | Requests data every **300 seconds**; retains the checkbox settings and does not reset the map view |
 | Error handling | Displays a message on the page if either data source fails, and retains the most recent successful data |
 | Attribution | EPD/data.gov.hk source statement, Open-Meteo CC BY 4.0 credit, CAMS acknowledgement, Esri + OSM/Leaflet credits |
+
+---
 
 ## 3. Data sources (and why two of them)
 
@@ -75,6 +76,8 @@ The dashboard therefore combines three sources:
 > observations joined to static location data, using the station name as the join key — together
 > with a clear account of the difference between measured and modelled data.
 
+---
+
 ## 4. How to run
 
 - **Locally**: double-click `index.html` in any modern browser, or serve the directory with
@@ -90,6 +93,8 @@ The dashboard therefore combines three sources:
   (The live-demo link at the top of this README is the author's own deployment.)
 
 Desktop browsers are assumed. Mobile screens are not supported, by design.
+
+---
 
 ## 5. Known limitations
 
@@ -107,6 +112,8 @@ section 3, and are not oversights:
 | Four external dependencies | Leaflet (unpkg CDN), two live APIs and the Esri tile service must all be reachable; when offline, the tiles and the data fail together |
 | The Esri attribution must remain visible | Removing or shortening the credit breaches Esri's terms of use — see the [basemap notes](docs/basemap.md) |
 
+---
+
 ## 6. Documentation
 
 | Document | What it covers |
@@ -114,16 +121,22 @@ section 3, and are not oversights:
 | **[Basemap notes](docs/basemap.md)** | Why the basemap is Esri rather than OpenStreetMap; the `file://` `Referer` problem that returns `HTTP 200` with an image stating that access is refused; the three remedies that do *not* work; the `{z}/{y}/{x}` and `maxZoom: 16` problems; and how to verify a tile layer by file size rather than by visual inspection |
 | **[Vibe-coding guide](docs/vibe-coding.md)** | The design-thinking rationale behind the dashboard, how it was built with an AI coding tool, and the complete prompt needed to reproduce it |
 
+---
+
 ## 7. Licences and attribution
 
-- AQHI data: Environmental Protection Department, HKSAR Government, via [DATA.GOV.HK](https://data.gov.hk).
-- Pollutant concentration layer: [Air quality data by Open-Meteo.com](https://open-meteo.com/),
+- **Code**: MIT — see [LICENSE](LICENSE), © 2026 drhycheung.
+- **AQHI data**: Environmental Protection Department, HKSAR Government, via [DATA.GOV.HK](https://data.gov.hk).
+- **Pollutant concentration layer**: [Air quality data by Open-Meteo.com](https://open-meteo.com/),
   licensed [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/); underlying data from the
   Copernicus Atmosphere Monitoring Service (CAMS), ECMWF.
-- Basemap: Tiles © [Esri](https://www.esri.com/) — *Canvas World Light Gray Base*; source Esri, HERE,
+- **Basemap**: Tiles © [Esri](https://www.esri.com/) — *Canvas World Light Gray Base*; source Esri, HERE,
   Garmin, © [OpenStreetMap contributors](https://www.openstreetmap.org/copyright).
   Map library: [Leaflet](https://leafletjs.com).
 
   Esri's ArcGIS Online basemaps are used instead of OSM's official tiles because they impose no
   `Referer` requirement, which is what allows the page to work when opened directly as a local file.
   OSM is still credited as a data source of the basemap. See the [basemap notes](docs/basemap.md).
+
+The code and the third-party data are separately licensed: the MIT licence covers this
+repository's code only and does not extend to the EPD, Open-Meteo/CAMS, Esri or OSM data.
